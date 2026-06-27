@@ -128,6 +128,7 @@
   <div class="summary">
     <div class="scard"><span class="lab">🍚 점심 (O)</span><span class="num" id="sumL">0<small>명</small></span></div>
     <div class="scard"><span class="lab">🌙 저녁 (O)</span><span class="num" id="sumD">0<small>명</small></span></div>
+    <div class="scard"><span class="lab">✓ 체크</span><span class="num" id="sumE">0<small>명</small></span></div>
   </div>
 
   <div id="app"></div>
@@ -233,9 +234,13 @@ function allIds(){ const ids=[...managerIds()]; teamList().forEach(tm=>{ if(tm.l
 function isOff(dk,id){ return !!(data._dayoff && data._dayoff[dk] && data._dayoff[dk][id]); }
 
 /* ===== 식사 값 ===== */
-function val(dk,meal,id){ const v=data&&data[dk]&&data[dk][meal]?data[dk][meal][id]:undefined; if(v===true)return "O"; return (v==="O"||v==="X")?v:null; }
+function val(dk,meal,id){ const v=data&&data[dk]&&data[dk][meal]?data[dk][meal][id]:undefined; if(v===true)return "O"; return v||null; }
 function countIds(ids,dk,meal){ return ids.filter(id=>!isOff(dk,id)&&val(dk,meal,id)==="O").length; }
+function countV(ids,dk){ return ids.filter(id=>!isOff(dk,id)&&val(dk,"etc",id)==="V").length; }
 function countMeal(dk,meal){ return countIds(allIds(),dk,meal); }
+function countMealV(dk){ return countV(allIds(),dk); }
+function cycleV(id){ if(!db||!connected){alert("실시간 연결 후 사용하세요.");return;}
+  const cur=val(selected,"etc",id); db.ref(`${DB_PATH}/${selected}/etc/${id}`).set(cur==="V"?null:"V"); }
 function cycle(id,meal){ if(!db||!connected){alert("실시간 연결 후 사용하세요.");return;}
   const cur=val(selected,meal,id); const next=cur==="O"?"X":cur==="X"?null:"O";
   db.ref(`${DB_PATH}/${selected}/${meal}/${id}`).set(next); }
@@ -288,22 +293,24 @@ function delTeam(tk){ if(!guard())return; const tm=roster.teams[tk]; if(!confirm
 /* ===== 렌더 ===== */
 function cellHtml(id,meal){ const v=val(selected,meal,id); const cls=v==="O"?"o":v==="X"?"x":""; const g=v==="O"?"O":v==="X"?"X":"·";
   return `<button class="cell ${cls}" data-act="cell" data-id="${id}" data-meal="${meal}">${g}</button>`; }
+function cellV(id){ const on=val(selected,"etc",id)==="V";
+  return `<button class="cell ${on?'o':''}" data-act="cellV" data-id="${id}">${on?'V':'·'}</button>`; }
 function badgeHtml(role){ return role==="leader"?'<span class="badge l">팀장</span>':role==="manager"?'<span class="badge m">관리자</span>':''; }
 function rowHtml(id,role,tk){
   const nm=nameOf(id), badge=badgeHtml(role);
   if(!editMode){
-    return `<div class="row n"><span class="nm">${nm}${badge}</span><div class="cells">${cellHtml(id,"lunch")}${cellHtml(id,"dinner")}</div></div>`;
+    return `<div class="row n"><span class="nm">${nm}${badge}</span><div class="cells">${cellHtml(id,"lunch")}${cellHtml(id,"dinner")}${cellV(id)}</div></div>`;
   }
   const nameBtn=`<button class="nm-edit" data-act="rename" data-id="${id}">${nm}${badge}<span class="pen">✎</span></button>`;
   const promote= role==="member"
     ? `<button class="pro" data-act="makeLeader" data-id="${id}" data-team="${tk}" title="팀장으로">👑</button>`
     : `<span></span>`;
   const del=`<button class="del" data-act="dayDel" data-id="${id}">×</button>`;
-  return `<div class="row e">${nameBtn}<div class="cells">${cellHtml(id,"lunch")}${cellHtml(id,"dinner")}</div>${promote}${del}</div>`;
+  return `<div class="row e">${nameBtn}<div class="cells">${cellHtml(id,"lunch")}${cellHtml(id,"dinner")}${cellV(id)}</div>${promote}${del}</div>`;
 }
 function colHead(){ return editMode
-  ? `<div class="col-head e"><span></span><div class="labs"><span>점심</span><span>저녁</span></div><span></span><span></span></div>`
-  : `<div class="col-head n"><span></span><div class="labs"><span>점심</span><span>저녁</span></div></div>`; }
+  ? `<div class="col-head e"><span></span><div class="labs"><span>점심</span><span>저녁</span><span>✓</span></div><span></span><span></span></div>`
+  : `<div class="col-head n"><span></span><div class="labs"><span>점심</span><span>저녁</span><span>✓</span></div></div>`; }
 
 function renderTabs(){
   const el=document.getElementById("tabs");
@@ -319,6 +326,7 @@ function renderDateEdit(){
 function renderSummary(){
   document.getElementById("sumL").innerHTML=countMeal(selected,"lunch")+'<small>명</small>';
   document.getElementById("sumD").innerHTML=countMeal(selected,"dinner")+'<small>명</small>';
+  document.getElementById("sumE").innerHTML=countMealV(selected)+'<small>명</small>';
 }
 function renderApp(){
   let html="";
@@ -327,7 +335,7 @@ function renderApp(){
   const mvis= mids.filter(id=>!isOff(selected,id));
   if(editMode || mvis.length){
     html+=`<div class="card"><div class="card-head"><div class="card-name mgr">관리자</div>
-      <div class="card-sub">점심 <i>${countIds(mids,selected,"lunch")}</i> · 저녁 <i>${countIds(mids,selected,"dinner")}</i></div></div>`;
+      <div class="card-sub">점심 <i>${countIds(mids,selected,"lunch")}</i> · 저녁 <i>${countIds(mids,selected,"dinner")}</i> · ✓ <i>${countV(mids,selected)}</i></div></div>`;
     if(mvis.length) html+=colHead()+mvis.map(id=>rowHtml(id,"manager")).join("");
     html+=`<div class="add-row"><button class="add-btn" data-act="addMgr">+ 관리자 추가</button></div></div>`;
   }
@@ -341,7 +349,7 @@ function renderApp(){
       : `<div class="card-name">${nameOf(tm.leader)} 팀</div>`;
     html+=`<div class="card"><div class="card-head">${nameEl}
       <div style="display:flex;align-items:center;gap:10px">
-        <div class="card-sub">점심 <i>${countIds(ids,selected,"lunch")}</i> · 저녁 <i>${countIds(ids,selected,"dinner")}</i></div>
+        <div class="card-sub">점심 <i>${countIds(ids,selected,"lunch")}</i> · 저녁 <i>${countIds(ids,selected,"dinner")}</i> · ✓ <i>${countV(ids,selected)}</i></div>
         <button class="team-del" data-act="delTeam" data-team="${tm.key}">×</button>
       </div></div>`;
     if(vis.length) html+=colHead();
@@ -370,6 +378,7 @@ function handleClick(e){
   const a=b.dataset.act, id=b.dataset.id, tk=b.dataset.team, key=b.dataset.key;
   switch(a){
     case "cell": cycle(id,b.dataset.meal); break;
+    case "cellV": cycleV(id); break;
     case "dayDel": dayRemove(id); break;
     case "rename": renamePerson(id); break;
     case "makeLeader": makeLeader(tk,id); break;
