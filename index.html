@@ -66,10 +66,10 @@
   .labs{display:flex;gap:6px;}
   .labs span{width:46px;text-align:center;font-size:11px;font-weight:800;color:var(--ink-soft);}
   .col-head.n{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 15px 2px;}
-  .col-head.e{display:grid;grid-template-columns:1fr auto 30px;gap:8px;align-items:center;padding:8px 15px 2px;}
+  .col-head.e{display:grid;grid-template-columns:1fr auto 30px 30px;gap:8px;align-items:center;padding:8px 15px 2px;}
 
   .row.n{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 15px;border-top:1px solid #f1ede4;}
-  .row.e{display:grid;grid-template-columns:1fr auto 30px;gap:8px;align-items:center;padding:8px 15px;border-top:1px solid #f1ede4;}
+  .row.e{display:grid;grid-template-columns:1fr auto 30px 30px;gap:8px;align-items:center;padding:8px 15px;border-top:1px solid #f1ede4;}
   .row.off{opacity:.42;}
   .nm{font-size:15px;font-weight:600;display:flex;align-items:center;gap:7px;min-width:0;}
   .nm-edit{background:none;border:none;font-family:inherit;font-size:15px;font-weight:600;color:var(--ink);text-align:left;padding:0;cursor:pointer;display:flex;align-items:center;gap:7px;min-width:0;}
@@ -84,6 +84,7 @@
   .cell.x{background:#fdecec;border-color:#f0b4b4;color:var(--x);}
 
   .del{width:30px;height:30px;border-radius:8px;border:1.5px solid #f0c0c0;background:#fff;color:var(--x);font-weight:800;font-size:18px;line-height:1;cursor:pointer;padding:0;}
+  .pro{width:30px;height:30px;border-radius:8px;border:1.5px solid #ead9c4;background:#fff;font-size:15px;line-height:1;cursor:pointer;padding:0;}
 
   .add-row{padding:9px 15px 13px;display:none;}
   body.edit .add-row{display:block;}
@@ -121,7 +122,7 @@
   <div class="date-edit" id="dateEdit"></div>
   <div class="edit-note">
     오른쪽 <b style="color:var(--x)">×</b> = <b>이 날짜에서만</b> 빼기 (다른 날엔 그대로) · 다시 넣으려면 <b>+ 추가</b><br>
-    <b>+ 추가</b>로 넣은 사람은 <b>지금 선택한 날짜에만</b> 들어가요 · 이름을 누르면 수정
+    <b>+ 추가</b>로 넣은 사람은 <b>지금 선택한 날짜에만</b> 들어가요 · 이름을 누르면 수정 · <b>👑</b> = 그 사람을 팀장으로
   </div>
 
   <div class="summary">
@@ -260,7 +261,10 @@ function delDate(key){ if(!guard())return; if(dates.length<=1){alert("최소 1�
 
 /* ===== 명단 편집 (× = 그 날짜에서만 빼기 / + = 그 날짜에 넣기) ===== */
 function excludeOtherDates(id){ dates.forEach(d=>{ if(d.key!==selected) db.ref(`${DB_PATH}/_dayoff/${d.key}/${id}`).set(true); }); }
-function dayRemove(id){ if(!guard())return; db.ref(`${DB_PATH}/_dayoff/${selected}/${id}`).set(true); }
+function dayRemove(id){ if(!guard())return;
+  const d=dates.find(x=>x.key===selected);
+  if(!confirm(nameOf(id)+" 님을 "+(d?d.label:"이 날짜")+" 명단에서 뺄까요?"))return;
+  db.ref(`${DB_PATH}/_dayoff/${selected}/${id}`).set(true); }
 function addManager(){ if(!guard())return; const nm=prompt("이 날짜에 추가할 관리자 이름"); if(!nm||!nm.trim())return; const name=nm.trim();
   const ex=managerIds().find(x=>nameOf(x)===name);
   if(ex){ db.ref(`${DB_PATH}/_dayoff/${selected}/${ex}`).set(null); return; }
@@ -273,6 +277,10 @@ function addTeam(){ if(!guard())return; const nm=prompt("새 팀장 이름"); if
   const id=newId(); let n=0; while(roster.teams&&roster.teams["t"+n])n++;
   const u={}; u["names/"+id]=nm.trim(); u["teams/t"+n]={seq:teamList().length,leader:id,members:[]}; rRef().update(u); }
 function renamePerson(id){ if(!guard())return; const nm=prompt("이름 수정",nameOf(id)); if(nm===null||!nm.trim())return; rRef().child("names/"+id).set(nm.trim()); }
+function makeLeader(tk,id){ if(!guard())return; const tm=roster.teams[tk]; if(!tm||tm.leader===id)return;
+  if(!confirm(nameOf(id)+" 님을 이 팀의 팀장으로 바꿀까요?\n(기존 팀장 "+nameOf(tm.leader)+" 님은 팀원으로 내려갑니다)"))return;
+  const mem=[tm.leader, ...(tm.members||[]).filter(x=>x!==id)];
+  const u={}; u["teams/"+tk+"/leader"]=id; u["teams/"+tk+"/members"]=mem; rRef().update(u); }
 function delTeam(tk){ if(!guard())return; const tm=roster.teams[tk]; if(!confirm(nameOf(tm.leader)+"팀 전체를 삭제할까요? (모든 날짜)"))return;
   const u={}; u["teams/"+tk]=null; u["names/"+tm.leader]=null; (tm.members||[]).forEach(id=>u["names/"+id]=null);
   rRef().update(u); clearAtt(tm.leader); (tm.members||[]).forEach(clearAtt); }
@@ -287,11 +295,14 @@ function rowHtml(id,role,tk){
     return `<div class="row n"><span class="nm">${nm}${badge}</span><div class="cells">${cellHtml(id,"lunch")}${cellHtml(id,"dinner")}</div></div>`;
   }
   const nameBtn=`<button class="nm-edit" data-act="rename" data-id="${id}">${nm}${badge}<span class="pen">✎</span></button>`;
+  const promote= role==="member"
+    ? `<button class="pro" data-act="makeLeader" data-id="${id}" data-team="${tk}" title="팀장으로">👑</button>`
+    : `<span></span>`;
   const del=`<button class="del" data-act="dayDel" data-id="${id}">×</button>`;
-  return `<div class="row e">${nameBtn}<div class="cells">${cellHtml(id,"lunch")}${cellHtml(id,"dinner")}</div>${del}</div>`;
+  return `<div class="row e">${nameBtn}<div class="cells">${cellHtml(id,"lunch")}${cellHtml(id,"dinner")}</div>${promote}${del}</div>`;
 }
 function colHead(){ return editMode
-  ? `<div class="col-head e"><span></span><div class="labs"><span>점심</span><span>저녁</span></div><span></span></div>`
+  ? `<div class="col-head e"><span></span><div class="labs"><span>점심</span><span>저녁</span></div><span></span><span></span></div>`
   : `<div class="col-head n"><span></span><div class="labs"><span>점심</span><span>저녁</span></div></div>`; }
 
 function renderTabs(){
@@ -361,6 +372,7 @@ function handleClick(e){
     case "cell": cycle(id,b.dataset.meal); break;
     case "dayDel": dayRemove(id); break;
     case "rename": renamePerson(id); break;
+    case "makeLeader": makeLeader(tk,id); break;
     case "delTeam": delTeam(tk); break;
     case "addMgr": addManager(); break;
     case "addMem": addMember(tk); break;
