@@ -66,10 +66,10 @@
   .labs{display:flex;gap:6px;}
   .labs span{width:46px;text-align:center;font-size:11px;font-weight:800;color:var(--ink-soft);}
   .col-head.n{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 15px 2px;}
-  .col-head.e{display:grid;grid-template-columns:28px 1fr auto 28px;gap:8px;align-items:center;padding:8px 15px 2px;}
+  .col-head.e{display:grid;grid-template-columns:1fr auto 30px;gap:8px;align-items:center;padding:8px 15px 2px;}
 
   .row.n{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 15px;border-top:1px solid #f1ede4;}
-  .row.e{display:grid;grid-template-columns:28px 1fr auto 28px;gap:8px;align-items:center;padding:8px 15px;border-top:1px solid #f1ede4;}
+  .row.e{display:grid;grid-template-columns:1fr auto 30px;gap:8px;align-items:center;padding:8px 15px;border-top:1px solid #f1ede4;}
   .row.off{opacity:.42;}
   .nm{font-size:15px;font-weight:600;display:flex;align-items:center;gap:7px;min-width:0;}
   .nm-edit{background:none;border:none;font-family:inherit;font-size:15px;font-weight:600;color:var(--ink);text-align:left;padding:0;cursor:pointer;display:flex;align-items:center;gap:7px;min-width:0;}
@@ -77,16 +77,13 @@
   .badge{font-size:10px;font-weight:800;color:#fff;padding:2px 6px;border-radius:6px;flex:0 0 auto;}
   .badge.l{background:var(--leader);} .badge.m{background:var(--mgr);}
 
-  .part{width:28px;height:28px;border-radius:8px;border:1.5px solid var(--o);background:var(--o);color:#fff;font-weight:800;font-size:14px;line-height:1;cursor:pointer;padding:0;}
-  .part.off{background:#fff;border-color:#d9d3c6;color:#bcb6a8;}
-
   .cells{display:flex;gap:6px;}
   .cell{width:46px;padding:8px 0;border:1.5px solid var(--line);background:#fff;border-radius:10px;font-family:inherit;font-weight:800;font-size:15px;color:#c3bdb0;cursor:pointer;transition:.12s;}
   .cell:active{transform:scale(.9);}
   .cell.o{background:var(--o);border-color:var(--o);color:#fff;}
   .cell.x{background:#fdecec;border-color:#f0b4b4;color:var(--x);}
 
-  .del{width:28px;height:28px;border-radius:8px;border:1.5px solid #f0c0c0;background:#fff;color:var(--x);font-weight:800;font-size:17px;line-height:1;cursor:pointer;padding:0;}
+  .del{width:30px;height:30px;border-radius:8px;border:1.5px solid #f0c0c0;background:#fff;color:var(--x);font-weight:800;font-size:18px;line-height:1;cursor:pointer;padding:0;}
 
   .add-row{padding:9px 15px 13px;display:none;}
   body.edit .add-row{display:block;}
@@ -123,8 +120,8 @@
   <div class="sticky"><div class="tabs" id="tabs"></div></div>
   <div class="date-edit" id="dateEdit"></div>
   <div class="edit-note">
-    줄 왼쪽 <b style="color:var(--o)">✓</b> = 이 날 참여 / <b>✕</b> = 이 날 제외 (날짜마다 따로)<br>
-    가운데 칸은 점심·저녁 <b>O·X</b> · 이름을 누르면 수정, <b style="color:var(--x)">×</b> 는 명단에서 영구 삭제
+    오른쪽 <b style="color:var(--x)">×</b> = <b>이 날짜에서만</b> 빼기 (다른 날엔 그대로) · 다시 넣으려면 <b>+ 추가</b><br>
+    <b>+ 추가</b>로 넣은 사람은 <b>지금 선택한 날짜에만</b> 들어가요 · 이름을 누르면 수정
   </div>
 
   <div class="summary">
@@ -233,7 +230,6 @@ function allIds(){ const ids=[...managerIds()]; teamList().forEach(tm=>{ if(tm.l
 
 /* ===== 날짜별 참여/제외 ===== */
 function isOff(dk,id){ return !!(data._dayoff && data._dayoff[dk] && data._dayoff[dk][id]); }
-function toggleDay(id){ if(!guard())return; db.ref(`${DB_PATH}/_dayoff/${selected}/${id}`).set(isOff(selected,id)?null:true); }
 
 /* ===== 식사 값 ===== */
 function val(dk,meal,id){ const v=data&&data[dk]&&data[dk][meal]?data[dk][meal][id]:undefined; if(v===true)return "O"; return (v==="O"||v==="X")?v:null; }
@@ -262,41 +258,40 @@ function delDate(key){ if(!guard())return; if(dates.length<=1){alert("최소 1�
   if(!confirm((cur?cur.label:"")+" 날짜를 삭제할까요? (해당 날짜 체크 내용도 사라집니다)"))return;
   db.ref(DB_PATH+"/_dates").set(dates.filter(d=>d.key!==key)); db.ref(DB_PATH+"/"+key).set(null); db.ref(DB_PATH+"/_dayoff/"+key).set(null); }
 
-/* ===== 명단 편집 ===== */
-function addManager(){ if(!guard())return; const nm=prompt("매니저 이름"); if(!nm||!nm.trim())return;
-  const id=newId(),u={}; u["names/"+id]=nm.trim(); u["managers"]=[...managerIds(),id]; rRef().update(u); }
-function addMember(tk){ if(!guard())return; const nm=prompt("팀원 이름"); if(!nm||!nm.trim())return;
-  const id=newId(),u={}; u["names/"+id]=nm.trim(); u["teams/"+tk+"/members"]=[...(roster.teams[tk].members||[]),id]; rRef().update(u); }
+/* ===== 명단 편집 (× = 그 날짜에서만 빼기 / + = 그 날짜에 넣기) ===== */
+function excludeOtherDates(id){ dates.forEach(d=>{ if(d.key!==selected) db.ref(`${DB_PATH}/_dayoff/${d.key}/${id}`).set(true); }); }
+function dayRemove(id){ if(!guard())return; db.ref(`${DB_PATH}/_dayoff/${selected}/${id}`).set(true); }
+function addManager(){ if(!guard())return; const nm=prompt("이 날짜에 추가할 관리자 이름"); if(!nm||!nm.trim())return; const name=nm.trim();
+  const ex=managerIds().find(x=>nameOf(x)===name);
+  if(ex){ db.ref(`${DB_PATH}/_dayoff/${selected}/${ex}`).set(null); return; }
+  const id=newId(),u={}; u["names/"+id]=name; u["managers"]=[...managerIds(),id]; rRef().update(u); excludeOtherDates(id); }
+function addMember(tk){ if(!guard())return; const nm=prompt("이 날짜에 추가할 사람 이름"); if(!nm||!nm.trim())return; const name=nm.trim();
+  const ex=(roster.teams[tk].members||[]).find(x=>nameOf(x)===name);
+  if(ex){ db.ref(`${DB_PATH}/_dayoff/${selected}/${ex}`).set(null); return; }
+  const id=newId(),u={}; u["names/"+id]=name; u["teams/"+tk+"/members"]=[...(roster.teams[tk].members||[]),id]; rRef().update(u); excludeOtherDates(id); }
 function addTeam(){ if(!guard())return; const nm=prompt("새 팀장 이름"); if(!nm||!nm.trim())return;
   const id=newId(); let n=0; while(roster.teams&&roster.teams["t"+n])n++;
   const u={}; u["names/"+id]=nm.trim(); u["teams/t"+n]={seq:teamList().length,leader:id,members:[]}; rRef().update(u); }
 function renamePerson(id){ if(!guard())return; const nm=prompt("이름 수정",nameOf(id)); if(nm===null||!nm.trim())return; rRef().child("names/"+id).set(nm.trim()); }
-function delManager(id){ if(!guard())return; if(!confirm(nameOf(id)+" 삭제?"))return;
-  const u={}; u["managers"]=managerIds().filter(x=>x!==id); u["names/"+id]=null; rRef().update(u); clearAtt(id); }
-function delMember(tk,id){ if(!guard())return; if(!confirm(nameOf(id)+" 삭제?"))return;
-  const u={}; u["teams/"+tk+"/members"]=(roster.teams[tk].members||[]).filter(x=>x!==id); u["names/"+id]=null; rRef().update(u); clearAtt(id); }
-function delTeam(tk){ if(!guard())return; const tm=roster.teams[tk]; if(!confirm(nameOf(tm.leader)+"팀 전체를 삭제할까요?"))return;
+function delTeam(tk){ if(!guard())return; const tm=roster.teams[tk]; if(!confirm(nameOf(tm.leader)+"팀 전체를 삭제할까요? (모든 날짜)"))return;
   const u={}; u["teams/"+tk]=null; u["names/"+tm.leader]=null; (tm.members||[]).forEach(id=>u["names/"+id]=null);
   rRef().update(u); clearAtt(tm.leader); (tm.members||[]).forEach(clearAtt); }
 
 /* ===== 렌더 ===== */
 function cellHtml(id,meal){ const v=val(selected,meal,id); const cls=v==="O"?"o":v==="X"?"x":""; const g=v==="O"?"O":v==="X"?"X":"·";
   return `<button class="cell ${cls}" data-act="cell" data-id="${id}" data-meal="${meal}">${g}</button>`; }
-function badgeHtml(role){ return role==="leader"?'<span class="badge l">팀장</span>':role==="manager"?'<span class="badge m">매니저</span>':''; }
+function badgeHtml(role){ return role==="leader"?'<span class="badge l">팀장</span>':role==="manager"?'<span class="badge m">관리자</span>':''; }
 function rowHtml(id,role,tk){
   const nm=nameOf(id), badge=badgeHtml(role);
   if(!editMode){
     return `<div class="row n"><span class="nm">${nm}${badge}</span><div class="cells">${cellHtml(id,"lunch")}${cellHtml(id,"dinner")}</div></div>`;
   }
-  const off=isOff(selected,id);
-  const part=`<button class="part ${off?'off':''}" data-act="day" data-id="${id}">${off?'✕':'✓'}</button>`;
   const nameBtn=`<button class="nm-edit" data-act="rename" data-id="${id}">${nm}${badge}<span class="pen">✎</span></button>`;
-  const delAct=role==="manager"?"delMgr":role==="leader"?"delTeam":"delMem";
-  const del=`<button class="del" data-act="${delAct}" data-id="${id}" data-team="${tk||''}">×</button>`;
-  return `<div class="row e ${off?'off':''}">${part}${nameBtn}<div class="cells">${cellHtml(id,"lunch")}${cellHtml(id,"dinner")}</div>${del}</div>`;
+  const del=`<button class="del" data-act="dayDel" data-id="${id}">×</button>`;
+  return `<div class="row e">${nameBtn}<div class="cells">${cellHtml(id,"lunch")}${cellHtml(id,"dinner")}</div>${del}</div>`;
 }
 function colHead(){ return editMode
-  ? `<div class="col-head e"><span></span><span></span><div class="labs"><span>점심</span><span>저녁</span></div><span></span></div>`
+  ? `<div class="col-head e"><span></span><div class="labs"><span>점심</span><span>저녁</span></div><span></span></div>`
   : `<div class="col-head n"><span></span><div class="labs"><span>점심</span><span>저녁</span></div></div>`; }
 
 function renderTabs(){
@@ -316,19 +311,19 @@ function renderSummary(){
 }
 function renderApp(){
   let html="";
-  // 매니저
+  // 관리자
   const mids=managerIds();
-  const mvis= editMode ? mids : mids.filter(id=>!isOff(selected,id));
+  const mvis= mids.filter(id=>!isOff(selected,id));
   if(editMode || mvis.length){
-    html+=`<div class="card"><div class="card-head"><div class="card-name mgr">매니저</div>
+    html+=`<div class="card"><div class="card-head"><div class="card-name mgr">관리자</div>
       <div class="card-sub">점심 <i>${countIds(mids,selected,"lunch")}</i> · 저녁 <i>${countIds(mids,selected,"dinner")}</i></div></div>`;
     if(mvis.length) html+=colHead()+mvis.map(id=>rowHtml(id,"manager")).join("");
-    html+=`<div class="add-row"><button class="add-btn" data-act="addMgr">+ 매니저 추가</button></div></div>`;
+    html+=`<div class="add-row"><button class="add-btn" data-act="addMgr">+ 관리자 추가</button></div></div>`;
   }
   // 팀
   teamList().forEach(tm=>{
     const ids=[tm.leader,...memberIds(tm)].filter(Boolean);
-    const vis= editMode ? ids : ids.filter(id=>!isOff(selected,id));
+    const vis= ids.filter(id=>!isOff(selected,id));
     if(!editMode && !vis.length) return;
     const nameEl= editMode
       ? `<button class="card-name-edit" data-act="rename" data-id="${tm.leader}">${nameOf(tm.leader)} 팀 <span class="pen">✎</span></button>`
@@ -339,7 +334,7 @@ function renderApp(){
         <button class="team-del" data-act="delTeam" data-team="${tm.key}">×</button>
       </div></div>`;
     if(vis.length) html+=colHead();
-    ids.forEach(id=>{ if(editMode||!isOff(selected,id)) html+=rowHtml(id, id===tm.leader?"leader":"member", tm.key); });
+    vis.forEach(id=> html+=rowHtml(id, id===tm.leader?"leader":"member", tm.key));
     html+=`<div class="add-row"><button class="add-btn" data-act="addMem" data-team="${tm.key}">+ 팀원 추가</button></div></div>`;
   });
   html+=`<button class="add-btn add-team" data-act="addTeam">+ 팀 추가</button>`;
@@ -364,10 +359,8 @@ function handleClick(e){
   const a=b.dataset.act, id=b.dataset.id, tk=b.dataset.team, key=b.dataset.key;
   switch(a){
     case "cell": cycle(id,b.dataset.meal); break;
-    case "day": toggleDay(id); break;
+    case "dayDel": dayRemove(id); break;
     case "rename": renamePerson(id); break;
-    case "delMgr": delManager(id); break;
-    case "delMem": delMember(tk,id); break;
     case "delTeam": delTeam(tk); break;
     case "addMgr": addManager(); break;
     case "addMem": addMember(tk); break;
