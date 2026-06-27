@@ -7,90 +7,76 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
 <style>
   :root{
-    --paper:#f4f1ea;
-    --card:#ffffff;
-    --ink:#2a2620;
-    --ink-soft:#8a8275;
-    --line:#e6e1d6;
-    --lunch:#1f9d57;       /* 점심 */
-    --lunch-soft:#e7f5ec;
-    --dinner:#4f46e5;      /* 저녁 */
-    --dinner-soft:#ecebfb;
-    --leader:#c2410c;
-    --live:#16a34a;
+    --paper:#f4f1ea; --card:#fff; --ink:#2a2620; --ink-soft:#8a8275; --line:#e6e1d6;
+    --o:#1f9d57; --x:#d4453e; --leader:#c2410c; --mgr:#6d28d9; --live:#16a34a;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;}
-  body{
-    font-family:'Pretendard',-apple-system,system-ui,sans-serif;
-    background:var(--paper);
-    color:var(--ink);
-    line-height:1.4;
-    padding-bottom:48px;
-  }
+  body{font-family:'Pretendard',-apple-system,system-ui,sans-serif;background:var(--paper);color:var(--ink);line-height:1.4;padding-bottom:48px;}
   .wrap{max-width:560px;margin:0 auto;padding:0 14px;}
 
-  /* ===== header ===== */
-  header{padding:20px 0 12px;display:flex;align-items:baseline;justify-content:space-between;gap:8px;}
-  header h1{font-size:21px;font-weight:800;letter-spacing:-0.02em;margin:0;}
+  header{padding:18px 0 10px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  header h1{font-size:20px;font-weight:800;letter-spacing:-0.02em;margin:0;}
+  .htools{display:flex;align-items:center;gap:10px;}
   .conn{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-soft);font-weight:600;}
   .dot{width:8px;height:8px;border-radius:50%;background:#cbb;transition:.3s;}
   .dot.on{background:var(--live);box-shadow:0 0 0 3px rgba(22,163,74,.18);}
+  .edit-btn{border:1.5px solid var(--ink);background:#fff;color:var(--ink);font-family:inherit;font-size:13px;font-weight:800;border-radius:11px;padding:7px 13px;cursor:pointer;}
+  body.edit .edit-btn{background:var(--ink);color:#fff;}
 
-  /* ===== sticky bar ===== */
   .sticky{position:sticky;top:0;z-index:20;background:var(--paper);padding-top:6px;}
   .tabs{display:flex;gap:7px;overflow-x:auto;padding:4px 0 10px;scrollbar-width:none;}
   .tabs::-webkit-scrollbar{display:none;}
-  .tab{
-    flex:0 0 auto;border:1.5px solid var(--line);background:var(--card);
-    border-radius:13px;padding:7px 13px;text-align:center;cursor:pointer;
-    transition:.15s;min-width:52px;
-  }
+  .tab{flex:0 0 auto;border:1.5px solid var(--line);background:var(--card);border-radius:13px;padding:7px 13px;text-align:center;cursor:pointer;transition:.15s;min-width:52px;}
   .tab b{display:block;font-size:15px;font-weight:800;letter-spacing:-0.02em;}
   .tab span{display:block;font-size:11px;color:var(--ink-soft);font-weight:600;margin-top:1px;}
   .tab.active{background:var(--ink);border-color:var(--ink);}
   .tab.active b,.tab.active span{color:#fff;}
 
-  /* ===== summary ===== */
   .summary{display:flex;gap:10px;padding-bottom:14px;}
-  .scard{
-    flex:1;background:var(--card);border:1.5px solid var(--line);border-radius:16px;
-    padding:13px 15px;display:flex;align-items:center;justify-content:space-between;
-  }
-  .scard .lab{font-size:13px;font-weight:700;color:var(--ink-soft);display:flex;align-items:center;gap:6px;}
-  .scard .num{font-size:30px;font-weight:800;letter-spacing:-0.03em;line-height:1;}
+  .scard{flex:1;background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:13px 15px;display:flex;align-items:center;justify-content:space-between;}
+  .scard .lab{font-size:13px;font-weight:700;color:var(--ink-soft);}
+  .scard .num{font-size:30px;font-weight:800;letter-spacing:-0.03em;line-height:1;color:var(--o);}
   .scard .num small{font-size:14px;font-weight:700;color:var(--ink-soft);margin-left:2px;}
-  .scard.lunch .num{color:var(--lunch);} .scard.lunch{border-color:#cfe9d8;}
-  .scard.dinner .num{color:var(--dinner);} .scard.dinner{border-color:#d6d4f6;}
+  .scard{border-color:#cfe9d8;}
 
-  /* ===== team card ===== */
-  .team{background:var(--card);border:1.5px solid var(--line);border-radius:16px;margin-bottom:12px;overflow:hidden;}
-  .team-head{display:flex;align-items:center;justify-content:space-between;padding:11px 15px;border-bottom:1px solid var(--line);background:#faf8f3;}
-  .team-name{font-size:15px;font-weight:800;letter-spacing:-0.02em;}
-  .team-sub{font-size:12px;font-weight:700;color:var(--ink-soft);}
-  .team-sub i{font-style:normal;color:var(--lunch);} .team-sub em{font-style:normal;color:var(--dinner);}
+  .card{background:var(--card);border:1.5px solid var(--line);border-radius:16px;margin-bottom:12px;overflow:hidden;}
+  .card-head{display:flex;align-items:center;justify-content:space-between;padding:11px 15px;border-bottom:1px solid var(--line);background:#faf8f3;gap:10px;}
+  .card-name{font-size:15px;font-weight:800;letter-spacing:-0.02em;display:flex;align-items:center;gap:8px;}
+  .card-name.mgr{color:var(--mgr);}
+  .card-sub{font-size:12px;font-weight:700;color:var(--ink-soft);white-space:nowrap;}
+  .card-sub i{font-style:normal;color:var(--o);}
+  .team-del{width:26px;height:26px;border-radius:8px;border:1.5px solid #f0c0c0;background:#fff;color:var(--x);font-weight:800;font-size:15px;line-height:1;cursor:pointer;padding:0;display:none;}
+  body.edit .team-del{display:inline-block;}
 
-  .row{display:flex;align-items:center;padding:9px 15px;border-top:1px solid #f1ede4;}
-  .row:first-child{border-top:none;}
-  .nm{flex:1;font-size:15px;font-weight:600;display:flex;align-items:center;gap:7px;}
-  .badge{font-size:10px;font-weight:800;color:#fff;background:var(--leader);padding:2px 6px;border-radius:6px;letter-spacing:.02em;}
-  .toggles{display:flex;gap:7px;}
-  .pill{
-    border:1.5px solid var(--line);background:#fff;color:var(--ink-soft);
-    font-family:inherit;font-size:13px;font-weight:800;border-radius:10px;
-    padding:7px 0;width:52px;text-align:center;cursor:pointer;transition:.12s;
-    user-select:none;
-  }
-  .pill:active{transform:scale(.93);}
-  .pill.on.l{background:var(--lunch);border-color:var(--lunch);color:#fff;}
-  .pill.on.d{background:var(--dinner);border-color:var(--dinner);color:#fff;}
+  .col-head{display:grid;grid-template-columns:1fr auto 0;gap:8px;align-items:center;padding:8px 15px 2px;}
+  body.edit .col-head{grid-template-columns:1fr auto 28px;}
+  .labs{display:flex;gap:6px;}
+  .labs span{width:46px;text-align:center;font-size:11px;font-weight:800;color:var(--ink-soft);}
 
-  /* ===== status table ===== */
-  .status-toggle{
-    width:100%;border:1.5px dashed var(--line);background:transparent;color:var(--ink);
-    font-family:inherit;font-size:14px;font-weight:800;border-radius:14px;padding:13px;
-    cursor:pointer;margin:4px 0 12px;
-  }
+  .row{display:grid;grid-template-columns:1fr auto 0;gap:8px;align-items:center;padding:8px 15px;border-top:1px solid #f1ede4;}
+  body.edit .row{grid-template-columns:1fr auto 28px;}
+  .nm{font-size:15px;font-weight:600;display:flex;align-items:center;gap:7px;min-width:0;}
+  .nm-edit{background:none;border:none;font-family:inherit;font-size:15px;font-weight:600;color:var(--ink);text-align:left;padding:0;cursor:pointer;display:flex;align-items:center;gap:7px;min-width:0;}
+  .pen{color:var(--ink-soft);font-size:12px;flex:0 0 auto;}
+  .badge{font-size:10px;font-weight:800;color:#fff;padding:2px 6px;border-radius:6px;flex:0 0 auto;}
+  .badge.l{background:var(--leader);} .badge.m{background:var(--mgr);}
+
+  .cells{display:flex;gap:6px;}
+  .cell{width:46px;padding:8px 0;border:1.5px solid var(--line);background:#fff;border-radius:10px;font-family:inherit;font-weight:800;font-size:15px;color:#c3bdb0;cursor:pointer;transition:.12s;}
+  .cell:active{transform:scale(.9);}
+  .cell.o{background:var(--o);border-color:var(--o);color:#fff;}
+  .cell.x{background:#fdecec;border-color:#f0b4b4;color:var(--x);}
+
+  .del{width:28px;height:28px;border-radius:8px;border:1.5px solid #f0c0c0;background:#fff;color:var(--x);font-weight:800;font-size:17px;line-height:1;cursor:pointer;padding:0;}
+
+  .add-row{padding:9px 15px 13px;display:none;}
+  body.edit .add-row{display:block;}
+  .add-btn{width:100%;border:1.5px dashed var(--line);background:transparent;color:var(--ink-soft);font-family:inherit;font-weight:800;font-size:13px;border-radius:10px;padding:9px;cursor:pointer;}
+  .add-team{display:none;margin:0 0 16px;}
+  body.edit .add-team{display:block;}
+
+  .status-toggle{width:100%;border:1.5px dashed var(--line);background:transparent;color:var(--ink);font-family:inherit;font-size:14px;font-weight:800;border-radius:14px;padding:13px;cursor:pointer;margin:4px 0 12px;}
   .status{background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:6px 4px 10px;margin-bottom:14px;display:none;}
   .status.show{display:block;}
   table{width:100%;border-collapse:collapse;}
@@ -99,65 +85,52 @@
   td{border-top:1px solid #f1ede4;font-weight:600;}
   td.day{font-weight:800;text-align:left;padding-left:14px;}
   td.day span{font-weight:600;color:var(--ink-soft);font-size:12px;margin-left:3px;}
-  td.l{color:var(--lunch);font-weight:800;} td.d{color:var(--dinner);font-weight:800;}
+  td.v{color:var(--o);font-weight:800;}
   tr.cur td{background:#faf8f3;}
   tr.total td{border-top:2px solid var(--line);font-weight:800;font-size:15px;background:#faf8f3;}
-  tr.total td.day{color:var(--ink);}
 
-  footer{text-align:center;font-size:11px;color:var(--ink-soft);padding:8px 0 4px;line-height:1.6;}
+  footer{text-align:center;font-size:11px;color:var(--ink-soft);padding:8px 0 4px;line-height:1.7;}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <h1>문화부 식수 인원 체크</h1>
-    <div class="conn"><span class="dot" id="dot"></span><span id="connTxt">연결 중…</span></div>
+    <div class="htools">
+      <div class="conn"><span class="dot" id="dot"></span><span id="connTxt">연결 중…</span></div>
+      <button class="edit-btn" id="editBtn">편집</button>
+    </div>
   </header>
 
-  <div class="sticky">
-    <div class="tabs" id="tabs"></div>
-  </div>
+  <div class="sticky"><div class="tabs" id="tabs"></div></div>
 
   <div class="summary">
-    <div class="scard lunch">
-      <span class="lab">🍚 점심</span>
-      <span class="num" id="sumL">0<small>명</small></span>
-    </div>
-    <div class="scard dinner">
-      <span class="lab">🌙 저녁</span>
-      <span class="num" id="sumD">0<small>명</small></span>
-    </div>
+    <div class="scard"><span class="lab">🍚 점심 (O)</span><span class="num" id="sumL">0<small>명</small></span></div>
+    <div class="scard"><span class="lab">🌙 저녁 (O)</span><span class="num" id="sumD">0<small>명</small></span></div>
   </div>
 
-  <div id="teams"></div>
+  <div id="app"></div>
 
   <button class="status-toggle" id="statusBtn">📊 전체 날짜 식수 현황 보기</button>
   <div class="status" id="status"></div>
 
-  <footer>이름을 누르면 바로 저장돼요 · 모두의 폰에서 실시간으로 합산됩니다</footer>
+  <footer>
+    칸을 누르면 <b>미정(·) → O(먹음) → X(안먹음)</b> 순서로 바뀝니다<br>
+    [편집]을 누르면 매니저·팀장·팀원 이름을 추가/삭제할 수 있어요
+  </footer>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
 <script>
 /* =========================================================
-   ⚙️ 설정 — 본인 Firebase 설정으로 교체하세요.
-   teamday.html / munhwabu-siksu.html 에 쓰던 k-hary 설정과
-   같은 값을 넣으면 됩니다. (databaseURL 지역이 다르면 꼭 수정!)
+   ⚙️ 설정 — 기존 munhwabu-siksu.html / teamday.html 의
+   firebaseConfig 와 동일하게 넣으세요. (지역 주소 확인!)
 ========================================================= */
 const firebaseConfig = {
   databaseURL: "https://k-hary-default-rtdb.firebaseio.com"
 };
-const DB_PATH = "siksu_2026_06";   // 저장 경로 (원하면 바꿔도 됨)
-
-/* ===== 명단 ===== */
-const TEAMS = [
-  { leader:"남이슬", members:["안연주","김보겸","이예희","김태인","이서연","조유정","박현후"] },
-  { leader:"김건하", members:["손주환","염창민","조현석","임동휘","하희중","이승재"] },
-  { leader:"박웅비", members:["홍한위","강윤찬","최예찬","박지효","정진수","김지한"] },
-  { leader:"조상원", members:["문요원","박진홍","송하선","김우중","권태현","양희석","김한주"] },
-  { leader:"김성욱", members:["안진성","김주석","최준수","윤석현","이수연","김채민","노현서","채승민"] },
-];
+const DB_PATH = "siksu_2026_06";
 
 /* ===== 날짜 ===== */
 const DATES = [
@@ -171,131 +144,222 @@ const DATES = [
   { key:"0708", label:"7/8",  day:"수" },
 ];
 
-/* ===== 사람마다 고유 id (이름 중복 안전) ===== */
-function pid(t,name){ return "t"+t+"_"+name; }
-const ALL_IDS = [];
-TEAMS.forEach((tm,t)=>{
-  ALL_IDS.push(pid(t,tm.leader));
-  tm.members.forEach(m=>ALL_IDS.push(pid(t,m)));
-});
+/* ===== 기본 명단 (Firebase에 명단이 없을 때만 처음 1회 생성) ===== */
+const INIT_TEAMS = [
+  { leader:"남이슬", members:["안연주","김보겸","이예희","김태인","이서연","조유정","박현후"] },
+  { leader:"김건하", members:["손주환","염창민","조현석","임동휘","하희중","이승재"] },
+  { leader:"박웅비", members:["홍한위","강윤찬","최예찬","박지효","정진수","김지한"] },
+  { leader:"조상원", members:["문요원","박진홍","송하선","김우중","권태현","양희석","김한주"] },
+  { leader:"김성욱", members:["안진성","김주석","최준수","윤석현","이수연","김채민","노현서","채승민"] },
+];
+function buildDefaultRoster(){
+  const teams={}, names={};
+  INIT_TEAMS.forEach((tm,t)=>{
+    const lid="t"+t+"_"+tm.leader; names[lid]=tm.leader;
+    const mids=tm.members.map(m=>{const id="t"+t+"_"+m; names[id]=m; return id;});
+    teams["t"+t]={ seq:t, leader:lid, members:mids };
+  });
+  return { teams, managers:[], names };
+}
+const DEFAULT_ROSTER = buildDefaultRoster();
 
-/* ===== Firebase ===== */
-let db=null, data={};
+/* ===== 상태 ===== */
+let db=null, data={}, roster=DEFAULT_ROSTER, connected=false, editMode=false, initing=false;
 let selected = DATES[0].key;
 
+/* ===== Firebase ===== */
 try{
   firebase.initializeApp(firebaseConfig);
   db = firebase.database();
   db.ref(".info/connected").on("value", s=>{
-    const ok = s.val()===true;
-    document.getElementById("dot").classList.toggle("on", ok);
-    document.getElementById("connTxt").textContent = ok ? "실시간 연결됨" : "연결 끊김";
+    connected = s.val()===true;
+    document.getElementById("dot").classList.toggle("on", connected);
+    document.getElementById("connTxt").textContent = connected ? "실시간 연결됨" : "연결 끊김";
   });
   db.ref(DB_PATH).on("value", snap=>{
     data = snap.val() || {};
+    if(data._roster){ roster = data._roster; }
+    else if(db && !initing){ initing=true; db.ref(DB_PATH+"/_roster").set(DEFAULT_ROSTER); return; }
     renderAll();
   });
 }catch(e){
   document.getElementById("connTxt").textContent = "설정 필요";
   console.error(e);
+  renderAll();
 }
 
-/* ===== 데이터 helper ===== */
-function isOn(dateKey, meal, id){ return !!(data?.[dateKey]?.[meal]?.[id]); }
-function countMeal(dateKey, meal){
-  const o = data?.[dateKey]?.[meal] || {};
-  let n=0; for(const k in o){ if(o[k]) n++; } return n;
+/* ===== helper ===== */
+function nameOf(id){ return (roster.names && roster.names[id]) || id; }
+function teamList(){
+  const t=roster.teams||{};
+  return Object.keys(t).map(k=>Object.assign({key:k},t[k])).sort((a,b)=>(a.seq||0)-(b.seq||0));
 }
-function countTeam(dateKey, meal, teamIdx){
-  const tm = TEAMS[teamIdx];
-  const ids = [pid(teamIdx,tm.leader), ...tm.members.map(m=>pid(teamIdx,m))];
-  return ids.filter(id=>isOn(dateKey,meal,id)).length;
+function memberIds(tm){ return tm.members||[]; }
+function managerIds(){ return roster.managers||[]; }
+function allIds(){
+  const ids=[...managerIds()];
+  teamList().forEach(tm=>{ if(tm.leader) ids.push(tm.leader); ids.push(...memberIds(tm)); });
+  return ids;
+}
+function val(dk,meal,id){
+  const v = data && data[dk] && data[dk][meal] ? data[dk][meal][id] : undefined;
+  if(v===true) return "O";        // 옛 데이터 호환
+  return (v==="O"||v==="X") ? v : null;
+}
+function countIds(ids,dk,meal){ return ids.filter(id=>val(dk,meal,id)==="O").length; }
+function countMeal(dk,meal){ return countIds(allIds(),dk,meal); }
+
+/* ===== 체크 (미정→O→X→미정) ===== */
+function cycle(id,meal){
+  if(!db||!connected){ alert("실시간 연결 후 사용하세요."); return; }
+  const cur=val(selected,meal,id);
+  const next = cur==="O" ? "X" : cur==="X" ? null : "O";
+  db.ref(`${DB_PATH}/${selected}/${meal}/${id}`).set(next);
 }
 
-/* ===== 체크 토글 ===== */
-function toggle(id, meal){
-  if(!db){ alert("Firebase 설정을 먼저 입력해주세요."); return; }
-  const on = isOn(selected, meal, id);
-  db.ref(`${DB_PATH}/${selected}/${meal}/${id}`).set(on ? null : true);
+/* ===== 명단 편집 ===== */
+function rRef(){ return db.ref(DB_PATH+"/_roster"); }
+function newId(){ return "p_"+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function guard(){ if(!db||!connected){ alert("실시간 연결 후 편집하세요."); return false; } return true; }
+
+function addManager(){
+  if(!guard())return; const nm=prompt("매니저 이름"); if(!nm||!nm.trim())return;
+  const id=newId(), u={};
+  u["names/"+id]=nm.trim(); u["managers"]=[...managerIds(),id];
+  rRef().update(u);
+}
+function addMember(tk){
+  if(!guard())return; const nm=prompt("팀원 이름"); if(!nm||!nm.trim())return;
+  const id=newId(), u={};
+  u["names/"+id]=nm.trim(); u["teams/"+tk+"/members"]=[...(roster.teams[tk].members||[]),id];
+  rRef().update(u);
+}
+function addTeam(){
+  if(!guard())return; const nm=prompt("새 팀장 이름"); if(!nm||!nm.trim())return;
+  const id=newId(); let n=0; while(roster.teams&&roster.teams["t"+n])n++;
+  const u={};
+  u["names/"+id]=nm.trim(); u["teams/t"+n]={ seq:teamList().length, leader:id, members:[] };
+  rRef().update(u);
+}
+function renamePerson(id){
+  if(!guard())return; const nm=prompt("이름 수정", nameOf(id)); if(nm===null||!nm.trim())return;
+  rRef().child("names/"+id).set(nm.trim());
+}
+function clearAtt(id){ DATES.forEach(d=>{ db.ref(`${DB_PATH}/${d.key}/lunch/${id}`).set(null); db.ref(`${DB_PATH}/${d.key}/dinner/${id}`).set(null); }); }
+function delManager(id){
+  if(!guard())return; if(!confirm(nameOf(id)+" 삭제?"))return;
+  const u={}; u["managers"]=managerIds().filter(x=>x!==id); u["names/"+id]=null;
+  rRef().update(u); clearAtt(id);
+}
+function delMember(tk,id){
+  if(!guard())return; if(!confirm(nameOf(id)+" 삭제?"))return;
+  const u={}; u["teams/"+tk+"/members"]=(roster.teams[tk].members||[]).filter(x=>x!==id); u["names/"+id]=null;
+  rRef().update(u); clearAtt(id);
+}
+function delTeam(tk){
+  if(!guard())return; const tm=roster.teams[tk];
+  if(!confirm(nameOf(tm.leader)+"팀 전체를 삭제할까요?"))return;
+  const u={}; u["teams/"+tk]=null; u["names/"+tm.leader]=null;
+  (tm.members||[]).forEach(id=>u["names/"+id]=null);
+  rRef().update(u); clearAtt(tm.leader); (tm.members||[]).forEach(clearAtt);
 }
 
-/* ===== 렌더: 날짜 탭 ===== */
+/* ===== 렌더 ===== */
+function cellHtml(id,meal){
+  const v=val(selected,meal,id);
+  const cls=v==="O"?"o":v==="X"?"x":"";
+  const g=v==="O"?"O":v==="X"?"X":"·";
+  return `<button class="cell ${cls}" data-act="cell" data-id="${id}" data-meal="${meal}">${g}</button>`;
+}
+function rowHtml(id, role, tk){
+  const nm=nameOf(id);
+  const badge = role==="leader"?'<span class="badge l">팀장</span>'
+            : role==="manager"?'<span class="badge m">매니저</span>':'';
+  const nameEl = editMode
+    ? `<button class="nm-edit" data-act="rename" data-id="${id}">${nm}${badge}<span class="pen">✎</span></button>`
+    : `<span class="nm">${nm}${badge}</span>`;
+  const delAct = role==="manager"?"delMgr":role==="leader"?"delTeam":"delMem";
+  const del = editMode ? `<button class="del" data-act="${delAct}" data-id="${id}" data-team="${tk||''}">×</button>` : `<span></span>`;
+  return `<div class="row">${nameEl}<div class="cells">${cellHtml(id,"lunch")}${cellHtml(id,"dinner")}</div>${del}</div>`;
+}
+function colHead(){ return `<div class="col-head"><span></span><div class="labs"><span>점심</span><span>저녁</span></div><span></span></div>`; }
+
+function renderApp(){
+  let html="";
+  // 매니저 카드
+  const mids=managerIds();
+  const ml=countIds(mids,selected,"lunch"), md=countIds(mids,selected,"dinner");
+  html+=`<div class="card">
+    <div class="card-head"><div class="card-name mgr">매니저</div>
+      <div class="card-sub">점심 <i>${ml}</i> · 저녁 <i>${md}</i></div></div>`;
+  if(mids.length) html+=colHead()+mids.map(id=>rowHtml(id,"manager")).join("");
+  html+=`<div class="add-row"><button class="add-btn" data-act="addMgr">+ 매니저 추가</button></div></div>`;
+  // 팀 카드
+  teamList().forEach(tm=>{
+    const ids=[tm.leader,...memberIds(tm)].filter(Boolean);
+    const cl=countIds(ids,selected,"lunch"), cd=countIds(ids,selected,"dinner");
+    html+=`<div class="card">
+      <div class="card-head">
+        <div class="card-name">${nameOf(tm.leader)} 팀</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="card-sub">점심 <i>${cl}</i> · 저녁 <i>${cd}</i></div>
+          <button class="team-del" data-act="delTeam" data-team="${tm.key}">×</button>
+        </div>
+      </div>${colHead()}`;
+    if(tm.leader) html+=rowHtml(tm.leader,"leader",tm.key);
+    html+=memberIds(tm).map(id=>rowHtml(id,"member",tm.key)).join("");
+    html+=`<div class="add-row"><button class="add-btn" data-act="addMem" data-team="${tm.key}">+ 팀원 추가</button></div></div>`;
+  });
+  html+=`<button class="add-btn add-team" data-act="addTeam">+ 팀 추가</button>`;
+  document.getElementById("app").innerHTML=html;
+}
+
 function renderTabs(){
-  const el = document.getElementById("tabs");
-  el.innerHTML = DATES.map(d=>`
-    <div class="tab ${d.key===selected?'active':''}" data-k="${d.key}">
-      <b>${d.label}</b><span>${d.day}</span>
-    </div>`).join("");
-  el.querySelectorAll(".tab").forEach(t=>{
-    t.onclick = ()=>{ selected = t.dataset.k; renderAll(); };
-  });
+  const el=document.getElementById("tabs");
+  el.innerHTML=DATES.map(d=>`<div class="tab ${d.key===selected?'active':''}" data-k="${d.key}"><b>${d.label}</b><span>${d.day}</span></div>`).join("");
+  el.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{selected=t.dataset.k;renderAll();});
 }
-
-/* ===== 렌더: 요약 ===== */
 function renderSummary(){
-  document.getElementById("sumL").innerHTML = countMeal(selected,"lunch")+'<small>명</small>';
-  document.getElementById("sumD").innerHTML = countMeal(selected,"dinner")+'<small>명</small>';
+  document.getElementById("sumL").innerHTML=countMeal(selected,"lunch")+'<small>명</small>';
+  document.getElementById("sumD").innerHTML=countMeal(selected,"dinner")+'<small>명</small>';
 }
-
-/* ===== 렌더: 팀 카드 ===== */
-function personRow(t, name, isLeader){
-  const id = pid(t,name);
-  const l = isOn(selected,"lunch",id) ? "on l" : "";
-  const d = isOn(selected,"dinner",id) ? "on d" : "";
-  return `<div class="row">
-    <div class="nm">${name}${isLeader?'<span class="badge">팀장</span>':''}</div>
-    <div class="toggles">
-      <button class="pill l ${l}" data-id="${id}" data-meal="lunch">점심</button>
-      <button class="pill d ${d}" data-id="${id}" data-meal="dinner">저녁</button>
-    </div></div>`;
-}
-function renderTeams(){
-  const el = document.getElementById("teams");
-  el.innerHTML = TEAMS.map((tm,t)=>{
-    const cl = countTeam(selected,"lunch",t);
-    const cd = countTeam(selected,"dinner",t);
-    const rows = personRow(t, tm.leader, true)
-      + tm.members.map(m=>personRow(t,m,false)).join("");
-    return `<div class="team">
-      <div class="team-head">
-        <div class="team-name">${tm.leader} 팀</div>
-        <div class="team-sub">점심 <i>${cl}</i> · 저녁 <em>${cd}</em></div>
-      </div>${rows}</div>`;
-  }).join("");
-  el.querySelectorAll(".pill").forEach(p=>{
-    p.onclick = ()=> toggle(p.dataset.id, p.dataset.meal);
-  });
-}
-
-/* ===== 렌더: 전체 현황 표 ===== */
 function renderStatus(){
-  const el = document.getElementById("status");
-  let tl=0, td=0;
-  const rows = DATES.map(d=>{
-    const l=countMeal(d.key,"lunch"), dn=countMeal(d.key,"dinner");
-    tl+=l; td+=dn;
-    return `<tr class="${d.key===selected?'cur':''}">
-      <td class="day">${d.label}<span>${d.day}</span></td>
-      <td class="l">${l}</td><td class="d">${dn}</td></tr>`;
+  let tl=0,td=0;
+  const rows=DATES.map(d=>{
+    const l=countMeal(d.key,"lunch"),dn=countMeal(d.key,"dinner"); tl+=l;td+=dn;
+    return `<tr class="${d.key===selected?'cur':''}"><td class="day">${d.label}<span>${d.day}</span></td><td class="v">${l}</td><td class="v">${dn}</td></tr>`;
   }).join("");
-  el.innerHTML = `<table>
+  document.getElementById("status").innerHTML=`<table>
     <thead><tr><th style="text-align:left;padding-left:14px">날짜</th><th>🍚 점심</th><th>🌙 저녁</th></tr></thead>
-    <tbody>${rows}
-      <tr class="total"><td class="day">합계</td><td>${tl}</td><td>${td}</td></tr>
-    </tbody></table>`;
+    <tbody>${rows}<tr class="total"><td class="day">합계</td><td>${tl}</td><td>${td}</td></tr></tbody></table>`;
 }
+function renderAll(){ renderTabs(); renderSummary(); renderApp(); renderStatus(); }
 
-document.getElementById("statusBtn").onclick = ()=>{
-  const s = document.getElementById("status");
-  const open = s.classList.toggle("show");
-  document.getElementById("statusBtn").textContent =
-    open ? "📊 전체 현황 닫기" : "📊 전체 날짜 식수 현황 보기";
+/* ===== 이벤트 위임 ===== */
+document.getElementById("app").addEventListener("click", e=>{
+  const b=e.target.closest("button"); if(!b)return;
+  const a=b.dataset.act, id=b.dataset.id, tk=b.dataset.team;
+  if(a==="cell") cycle(id,b.dataset.meal);
+  else if(a==="rename") renamePerson(id);
+  else if(a==="delMgr") delManager(id);
+  else if(a==="delMem") delMember(tk,id);
+  else if(a==="delTeam") delTeam(tk);
+  else if(a==="addMgr") addManager();
+  else if(a==="addMem") addMember(tk);
+  else if(a==="addTeam") addTeam();
+});
+document.getElementById("editBtn").onclick=()=>{
+  editMode=!editMode;
+  document.body.classList.toggle("edit",editMode);
+  document.getElementById("editBtn").textContent=editMode?"완료":"편집";
+  renderAll();
+};
+document.getElementById("statusBtn").onclick=()=>{
+  const s=document.getElementById("status");
+  const open=s.classList.toggle("show");
+  document.getElementById("statusBtn").textContent=open?"📊 전체 현황 닫기":"📊 전체 날짜 식수 현황 보기";
 };
 
-/* ===== 전체 렌더 ===== */
-function renderAll(){
-  renderTabs(); renderSummary(); renderTeams(); renderStatus();
-}
 renderAll();
 </script>
 </body>
