@@ -43,6 +43,10 @@
   .de-chip .mini.del{color:var(--x);font-weight:800;}
   .de-add{border:1.5px dashed var(--line);background:transparent;color:var(--ink-soft);font-family:inherit;font-weight:800;font-size:13px;border-radius:10px;padding:6px 11px;cursor:pointer;}
 
+  .edit-note{display:none;background:#fffaf0;border:1.5px solid #f0e2c8;border-radius:12px;padding:9px 12px;margin-bottom:12px;font-size:12px;font-weight:600;color:#8a6d3b;line-height:1.6;}
+  body.edit .edit-note{display:block;}
+  .edit-note b{font-weight:800;}
+
   .summary{display:flex;gap:10px;padding-bottom:14px;}
   .scard{flex:1;background:var(--card);border:1.5px solid #cfe9d8;border-radius:16px;padding:13px 15px;display:flex;align-items:center;justify-content:space-between;}
   .scard .lab{font-size:13px;font-weight:700;color:var(--ink-soft);}
@@ -59,18 +63,22 @@
   .team-del{width:26px;height:26px;border-radius:8px;border:1.5px solid #f0c0c0;background:#fff;color:var(--x);font-weight:800;font-size:15px;line-height:1;cursor:pointer;padding:0;display:none;}
   body.edit .team-del{display:inline-block;}
 
-  .col-head{display:grid;grid-template-columns:1fr auto 0;gap:8px;align-items:center;padding:8px 15px 2px;}
-  body.edit .col-head{grid-template-columns:1fr auto 28px;}
   .labs{display:flex;gap:6px;}
   .labs span{width:46px;text-align:center;font-size:11px;font-weight:800;color:var(--ink-soft);}
+  .col-head.n{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 15px 2px;}
+  .col-head.e{display:grid;grid-template-columns:28px 1fr auto 28px;gap:8px;align-items:center;padding:8px 15px 2px;}
 
-  .row{display:grid;grid-template-columns:1fr auto 0;gap:8px;align-items:center;padding:8px 15px;border-top:1px solid #f1ede4;}
-  body.edit .row{grid-template-columns:1fr auto 28px;}
+  .row.n{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 15px;border-top:1px solid #f1ede4;}
+  .row.e{display:grid;grid-template-columns:28px 1fr auto 28px;gap:8px;align-items:center;padding:8px 15px;border-top:1px solid #f1ede4;}
+  .row.off{opacity:.42;}
   .nm{font-size:15px;font-weight:600;display:flex;align-items:center;gap:7px;min-width:0;}
   .nm-edit{background:none;border:none;font-family:inherit;font-size:15px;font-weight:600;color:var(--ink);text-align:left;padding:0;cursor:pointer;display:flex;align-items:center;gap:7px;min-width:0;}
   .pen{color:var(--ink-soft);font-size:12px;flex:0 0 auto;}
   .badge{font-size:10px;font-weight:800;color:#fff;padding:2px 6px;border-radius:6px;flex:0 0 auto;}
   .badge.l{background:var(--leader);} .badge.m{background:var(--mgr);}
+
+  .part{width:28px;height:28px;border-radius:8px;border:1.5px solid var(--o);background:var(--o);color:#fff;font-weight:800;font-size:14px;line-height:1;cursor:pointer;padding:0;}
+  .part.off{background:#fff;border-color:#d9d3c6;color:#bcb6a8;}
 
   .cells{display:flex;gap:6px;}
   .cell{width:46px;padding:8px 0;border:1.5px solid var(--line);background:#fff;border-radius:10px;font-family:inherit;font-weight:800;font-size:15px;color:#c3bdb0;cursor:pointer;transition:.12s;}
@@ -114,6 +122,10 @@
 
   <div class="sticky"><div class="tabs" id="tabs"></div></div>
   <div class="date-edit" id="dateEdit"></div>
+  <div class="edit-note">
+    줄 왼쪽 <b style="color:var(--o)">✓</b> = 이 날 참여 / <b>✕</b> = 이 날 제외 (날짜마다 따로)<br>
+    가운데 칸은 점심·저녁 <b>O·X</b> · 이름을 누르면 수정, <b style="color:var(--x)">×</b> 는 명단에서 영구 삭제
+  </div>
 
   <div class="summary">
     <div class="scard"><span class="lab">🍚 점심 (O)</span><span class="num" id="sumL">0<small>명</small></span></div>
@@ -127,7 +139,7 @@
 
   <footer>
     칸을 누르면 <b>미정(·) → O(먹음) → X(안먹음)</b> 순서로 바뀝니다<br>
-    [편집]에서 날짜·매니저·팀장·팀원을 추가/수정/삭제할 수 있어요
+    [편집]에서 날짜·인원 추가/수정/삭제 및 날짜별 참여 인원을 정할 수 있어요
   </footer>
 </div>
 
@@ -142,10 +154,10 @@ const firebaseConfig = {
   databaseURL: "https://k-hary-default-rtdb.firebaseio.com"
 };
 const DB_PATH = "siksu_2026_06";
-const YEAR = 2026;                 // 요일 자동계산 기준 연도
+const YEAR = 2026;
 const KDAY = ["일","월","화","수","목","금","토"];
 
-/* ===== 기본 날짜 (Firebase에 없을 때만 처음 1회 생성) ===== */
+/* ===== 기본 날짜 (없을 때만 처음 1회 생성) ===== */
 const DEFAULT_DATES = [
   { key:"0627", label:"6/27", day:"토" },
   { key:"0628", label:"6/28", day:"일" },
@@ -157,7 +169,7 @@ const DEFAULT_DATES = [
   { key:"0708", label:"7/8",  day:"수" },
 ];
 
-/* ===== 기본 명단 (Firebase에 없을 때만 처음 1회 생성) ===== */
+/* ===== 기본 명단 (없을 때만 처음 1회 생성) ===== */
 const INIT_TEAMS = [
   { leader:"남이슬", members:["안연주","김보겸","이예희","김태인","이서연","조유정","박현후"] },
   { leader:"김건하", members:["손주환","염창민","조현석","임동휘","하희중","이승재"] },
@@ -195,13 +207,9 @@ try{
     data = snap.val() || {};
     roster = data._roster || DEFAULT_ROSTER;
     dates  = data._dates  || DEFAULT_DATES.slice();
-    maybeInit();
-    renderAll();
+    maybeInit(); renderAll();
   });
-}catch(e){
-  document.getElementById("connTxt").textContent = "설정 필요";
-  console.error(e); renderAll();
-}
+}catch(e){ document.getElementById("connTxt").textContent="설정 필요"; console.error(e); renderAll(); }
 function maybeInit(){
   if(!db || !connected || initing) return;
   const need={};
@@ -210,60 +218,48 @@ function maybeInit(){
   if(Object.keys(need).length){ initing=true; db.ref(DB_PATH).update(need); }
 }
 
-/* ===== 날짜 helper ===== */
+/* ===== 날짜 ===== */
 function parseMD(s){ const m=String(s).match(/(\d{1,2})\s*[\/.\-월]\s*(\d{1,2})/); return m?{mo:+m[1],d:+m[2]}:null; }
 function mkDate(s){ const p=parseMD(s); if(!p)return null; return {label:p.mo+"/"+p.d, day:KDAY[new Date(YEAR,p.mo-1,p.d).getDay()]}; }
-function sortedDates(){
-  return dates.slice().sort((a,b)=>{
-    const pa=parseMD(a.label)||{mo:99,d:99}, pb=parseMD(b.label)||{mo:99,d:99};
-    return (pa.mo*100+pa.d)-(pb.mo*100+pb.d);
-  });
-}
+function sortedDates(){ return dates.slice().sort((a,b)=>{const pa=parseMD(a.label)||{mo:99,d:99},pb=parseMD(b.label)||{mo:99,d:99};return (pa.mo*100+pa.d)-(pb.mo*100+pb.d);}); }
 
-/* ===== 명단 helper ===== */
+/* ===== 명단 ===== */
 function nameOf(id){ return (roster.names && roster.names[id]) || id; }
 function teamList(){ const t=roster.teams||{}; return Object.keys(t).map(k=>Object.assign({key:k},t[k])).sort((a,b)=>(a.seq||0)-(b.seq||0)); }
 function memberIds(tm){ return tm.members||[]; }
 function managerIds(){ return roster.managers||[]; }
 function allIds(){ const ids=[...managerIds()]; teamList().forEach(tm=>{ if(tm.leader)ids.push(tm.leader); ids.push(...memberIds(tm)); }); return ids; }
-function val(dk,meal,id){ const v=data&&data[dk]&&data[dk][meal]?data[dk][meal][id]:undefined; if(v===true)return "O"; return (v==="O"||v==="X")?v:null; }
-function countIds(ids,dk,meal){ return ids.filter(id=>val(dk,meal,id)==="O").length; }
-function countMeal(dk,meal){ return countIds(allIds(),dk,meal); }
 
-/* ===== 체크 ===== */
-function cycle(id,meal){
-  if(!db||!connected){ alert("실시간 연결 후 사용하세요."); return; }
-  const cur=val(selected,meal,id);
-  const next= cur==="O" ? "X" : cur==="X" ? null : "O";
-  db.ref(`${DB_PATH}/${selected}/${meal}/${id}`).set(next);
-}
+/* ===== 날짜별 참여/제외 ===== */
+function isOff(dk,id){ return !!(data._dayoff && data._dayoff[dk] && data._dayoff[dk][id]); }
+function toggleDay(id){ if(!guard())return; db.ref(`${DB_PATH}/_dayoff/${selected}/${id}`).set(isOff(selected,id)?null:true); }
+
+/* ===== 식사 값 ===== */
+function val(dk,meal,id){ const v=data&&data[dk]&&data[dk][meal]?data[dk][meal][id]:undefined; if(v===true)return "O"; return (v==="O"||v==="X")?v:null; }
+function countIds(ids,dk,meal){ return ids.filter(id=>!isOff(dk,id)&&val(dk,meal,id)==="O").length; }
+function countMeal(dk,meal){ return countIds(allIds(),dk,meal); }
+function cycle(id,meal){ if(!db||!connected){alert("실시간 연결 후 사용하세요.");return;}
+  const cur=val(selected,meal,id); const next=cur==="O"?"X":cur==="X"?null:"O";
+  db.ref(`${DB_PATH}/${selected}/${meal}/${id}`).set(next); }
 
 /* ===== 편집 공통 ===== */
 function rRef(){ return db.ref(DB_PATH+"/_roster"); }
 function newId(){ return "p_"+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 function guard(){ if(!db||!connected){ alert("실시간 연결 후 편집하세요."); return false; } return true; }
-function clearAtt(id){ dates.forEach(d=>{ db.ref(`${DB_PATH}/${d.key}/lunch/${id}`).set(null); db.ref(`${DB_PATH}/${d.key}/dinner/${id}`).set(null); }); }
+function clearAtt(id){ dates.forEach(d=>{ db.ref(`${DB_PATH}/${d.key}/lunch/${id}`).set(null); db.ref(`${DB_PATH}/${d.key}/dinner/${id}`).set(null); db.ref(`${DB_PATH}/_dayoff/${d.key}/${id}`).set(null); }); }
 
 /* ===== 날짜 편집 ===== */
-function addDate(){
-  if(!guard())return; const s=prompt("추가할 날짜 (예: 7/10)"); if(!s)return;
-  const md=mkDate(s); if(!md){ alert("날짜 형식이 올바르지 않아요. 예: 7/10"); return; }
-  db.ref(DB_PATH+"/_dates").set([...dates,{key:"d_"+Date.now().toString(36),label:md.label,day:md.day}]);
-}
-function editDate(key){
-  if(!guard())return; const cur=dates.find(d=>d.key===key); if(!cur)return;
+function addDate(){ if(!guard())return; const s=prompt("추가할 날짜 (예: 7/10)"); if(!s)return;
+  const md=mkDate(s); if(!md){alert("날짜 형식이 올바르지 않아요. 예: 7/10");return;}
+  db.ref(DB_PATH+"/_dates").set([...dates,{key:"d_"+Date.now().toString(36),label:md.label,day:md.day}]); }
+function editDate(key){ if(!guard())return; const cur=dates.find(d=>d.key===key); if(!cur)return;
   const s=prompt("날짜 수정 (예: 7/10)",cur.label); if(s===null)return;
-  const md=mkDate(s); if(!md){ alert("날짜 형식이 올바르지 않아요. 예: 7/10"); return; }
-  db.ref(DB_PATH+"/_dates").set(dates.map(d=>d.key===key?{key:d.key,label:md.label,day:md.day}:d));
-}
-function delDate(key){
-  if(!guard())return;
-  if(dates.length<=1){ alert("최소 1개 날짜는 남겨주세요."); return; }
+  const md=mkDate(s); if(!md){alert("날짜 형식이 올바르지 않아요. 예: 7/10");return;}
+  db.ref(DB_PATH+"/_dates").set(dates.map(d=>d.key===key?{key:d.key,label:md.label,day:md.day}:d)); }
+function delDate(key){ if(!guard())return; if(dates.length<=1){alert("최소 1개 날짜는 남겨주세요.");return;}
   const cur=dates.find(d=>d.key===key);
   if(!confirm((cur?cur.label:"")+" 날짜를 삭제할까요? (해당 날짜 체크 내용도 사라집니다)"))return;
-  db.ref(DB_PATH+"/_dates").set(dates.filter(d=>d.key!==key));
-  db.ref(DB_PATH+"/"+key).set(null);
-}
+  db.ref(DB_PATH+"/_dates").set(dates.filter(d=>d.key!==key)); db.ref(DB_PATH+"/"+key).set(null); db.ref(DB_PATH+"/_dayoff/"+key).set(null); }
 
 /* ===== 명단 편집 ===== */
 function addManager(){ if(!guard())return; const nm=prompt("매니저 이름"); if(!nm||!nm.trim())return;
@@ -273,31 +269,34 @@ function addMember(tk){ if(!guard())return; const nm=prompt("팀원 이름"); if
 function addTeam(){ if(!guard())return; const nm=prompt("새 팀장 이름"); if(!nm||!nm.trim())return;
   const id=newId(); let n=0; while(roster.teams&&roster.teams["t"+n])n++;
   const u={}; u["names/"+id]=nm.trim(); u["teams/t"+n]={seq:teamList().length,leader:id,members:[]}; rRef().update(u); }
-function renamePerson(id){ if(!guard())return; const nm=prompt("이름 수정",nameOf(id)); if(nm===null||!nm.trim())return;
-  rRef().child("names/"+id).set(nm.trim()); }
+function renamePerson(id){ if(!guard())return; const nm=prompt("이름 수정",nameOf(id)); if(nm===null||!nm.trim())return; rRef().child("names/"+id).set(nm.trim()); }
 function delManager(id){ if(!guard())return; if(!confirm(nameOf(id)+" 삭제?"))return;
   const u={}; u["managers"]=managerIds().filter(x=>x!==id); u["names/"+id]=null; rRef().update(u); clearAtt(id); }
 function delMember(tk,id){ if(!guard())return; if(!confirm(nameOf(id)+" 삭제?"))return;
   const u={}; u["teams/"+tk+"/members"]=(roster.teams[tk].members||[]).filter(x=>x!==id); u["names/"+id]=null; rRef().update(u); clearAtt(id); }
-function delTeam(tk){ if(!guard())return; const tm=roster.teams[tk];
-  if(!confirm(nameOf(tm.leader)+"팀 전체를 삭제할까요?"))return;
+function delTeam(tk){ if(!guard())return; const tm=roster.teams[tk]; if(!confirm(nameOf(tm.leader)+"팀 전체를 삭제할까요?"))return;
   const u={}; u["teams/"+tk]=null; u["names/"+tm.leader]=null; (tm.members||[]).forEach(id=>u["names/"+id]=null);
   rRef().update(u); clearAtt(tm.leader); (tm.members||[]).forEach(clearAtt); }
 
 /* ===== 렌더 ===== */
 function cellHtml(id,meal){ const v=val(selected,meal,id); const cls=v==="O"?"o":v==="X"?"x":""; const g=v==="O"?"O":v==="X"?"X":"·";
   return `<button class="cell ${cls}" data-act="cell" data-id="${id}" data-meal="${meal}">${g}</button>`; }
+function badgeHtml(role){ return role==="leader"?'<span class="badge l">팀장</span>':role==="manager"?'<span class="badge m">매니저</span>':''; }
 function rowHtml(id,role,tk){
-  const nm=nameOf(id);
-  const badge= role==="leader"?'<span class="badge l">팀장</span>': role==="manager"?'<span class="badge m">매니저</span>':'';
-  const nameEl= editMode
-    ? `<button class="nm-edit" data-act="rename" data-id="${id}">${nm}${badge}<span class="pen">✎</span></button>`
-    : `<span class="nm">${nm}${badge}</span>`;
-  const delAct= role==="manager"?"delMgr":role==="leader"?"delTeam":"delMem";
-  const del= editMode ? `<button class="del" data-act="${delAct}" data-id="${id}" data-team="${tk||''}">×</button>` : `<span></span>`;
-  return `<div class="row">${nameEl}<div class="cells">${cellHtml(id,"lunch")}${cellHtml(id,"dinner")}</div>${del}</div>`;
+  const nm=nameOf(id), badge=badgeHtml(role);
+  if(!editMode){
+    return `<div class="row n"><span class="nm">${nm}${badge}</span><div class="cells">${cellHtml(id,"lunch")}${cellHtml(id,"dinner")}</div></div>`;
+  }
+  const off=isOff(selected,id);
+  const part=`<button class="part ${off?'off':''}" data-act="day" data-id="${id}">${off?'✕':'✓'}</button>`;
+  const nameBtn=`<button class="nm-edit" data-act="rename" data-id="${id}">${nm}${badge}<span class="pen">✎</span></button>`;
+  const delAct=role==="manager"?"delMgr":role==="leader"?"delTeam":"delMem";
+  const del=`<button class="del" data-act="${delAct}" data-id="${id}" data-team="${tk||''}">×</button>`;
+  return `<div class="row e ${off?'off':''}">${part}${nameBtn}<div class="cells">${cellHtml(id,"lunch")}${cellHtml(id,"dinner")}</div>${del}</div>`;
 }
-function colHead(){ return `<div class="col-head"><span></span><div class="labs"><span>점심</span><span>저녁</span></div><span></span></div>`; }
+function colHead(){ return editMode
+  ? `<div class="col-head e"><span></span><span></span><div class="labs"><span>점심</span><span>저녁</span></div><span></span></div>`
+  : `<div class="col-head n"><span></span><div class="labs"><span>점심</span><span>저녁</span></div></div>`; }
 
 function renderTabs(){
   const el=document.getElementById("tabs");
@@ -308,8 +307,7 @@ function renderDateEdit(){
   const chips=sortedDates().map(d=>`<div class="de-chip"><b>${d.label}</b> <span class="wd">${d.day}</span>
     <button class="mini" data-act="editDate" data-key="${d.key}">✎</button>
     <button class="mini del" data-act="delDate" data-key="${d.key}">×</button></div>`).join("");
-  document.getElementById("dateEdit").innerHTML=
-    `<div class="de-title">📅 날짜 관리 (추가 · 수정 · 삭제)</div><div class="de-chips">${chips}<button class="de-add" data-act="addDate">+ 날짜 추가</button></div>`;
+  document.getElementById("dateEdit").innerHTML=`<div class="de-title">📅 날짜 관리 (추가 · 수정 · 삭제)</div><div class="de-chips">${chips}<button class="de-add" data-act="addDate">+ 날짜 추가</button></div>`;
 }
 function renderSummary(){
   document.getElementById("sumL").innerHTML=countMeal(selected,"lunch")+'<small>명</small>';
@@ -317,13 +315,20 @@ function renderSummary(){
 }
 function renderApp(){
   let html="";
+  // 매니저
   const mids=managerIds();
-  html+=`<div class="card"><div class="card-head"><div class="card-name mgr">매니저</div>
-    <div class="card-sub">점심 <i>${countIds(mids,selected,"lunch")}</i> · 저녁 <i>${countIds(mids,selected,"dinner")}</i></div></div>`;
-  if(mids.length) html+=colHead()+mids.map(id=>rowHtml(id,"manager")).join("");
-  html+=`<div class="add-row"><button class="add-btn" data-act="addMgr">+ 매니저 추가</button></div></div>`;
+  const mvis= editMode ? mids : mids.filter(id=>!isOff(selected,id));
+  if(editMode || mvis.length){
+    html+=`<div class="card"><div class="card-head"><div class="card-name mgr">매니저</div>
+      <div class="card-sub">점심 <i>${countIds(mids,selected,"lunch")}</i> · 저녁 <i>${countIds(mids,selected,"dinner")}</i></div></div>`;
+    if(mvis.length) html+=colHead()+mvis.map(id=>rowHtml(id,"manager")).join("");
+    html+=`<div class="add-row"><button class="add-btn" data-act="addMgr">+ 매니저 추가</button></div></div>`;
+  }
+  // 팀
   teamList().forEach(tm=>{
     const ids=[tm.leader,...memberIds(tm)].filter(Boolean);
+    const vis= editMode ? ids : ids.filter(id=>!isOff(selected,id));
+    if(!editMode && !vis.length) return;
     const nameEl= editMode
       ? `<button class="card-name-edit" data-act="rename" data-id="${tm.leader}">${nameOf(tm.leader)} 팀 <span class="pen">✎</span></button>`
       : `<div class="card-name">${nameOf(tm.leader)} 팀</div>`;
@@ -331,9 +336,9 @@ function renderApp(){
       <div style="display:flex;align-items:center;gap:10px">
         <div class="card-sub">점심 <i>${countIds(ids,selected,"lunch")}</i> · 저녁 <i>${countIds(ids,selected,"dinner")}</i></div>
         <button class="team-del" data-act="delTeam" data-team="${tm.key}">×</button>
-      </div></div>${colHead()}`;
-    if(tm.leader) html+=rowHtml(tm.leader,"leader",tm.key);
-    html+=memberIds(tm).map(id=>rowHtml(id,"member",tm.key)).join("");
+      </div></div>`;
+    if(vis.length) html+=colHead();
+    ids.forEach(id=>{ if(editMode||!isOff(selected,id)) html+=rowHtml(id, id===tm.leader?"leader":"member", tm.key); });
     html+=`<div class="add-row"><button class="add-btn" data-act="addMem" data-team="${tm.key}">+ 팀원 추가</button></div></div>`;
   });
   html+=`<button class="add-btn add-team" data-act="addTeam">+ 팀 추가</button>`;
@@ -358,6 +363,7 @@ function handleClick(e){
   const a=b.dataset.act, id=b.dataset.id, tk=b.dataset.team, key=b.dataset.key;
   switch(a){
     case "cell": cycle(id,b.dataset.meal); break;
+    case "day": toggleDay(id); break;
     case "rename": renamePerson(id); break;
     case "delMgr": delManager(id); break;
     case "delMem": delMember(tk,id); break;
@@ -373,16 +379,13 @@ function handleClick(e){
 document.getElementById("app").addEventListener("click",handleClick);
 document.getElementById("dateEdit").addEventListener("click",handleClick);
 document.getElementById("editBtn").onclick=()=>{
-  editMode=!editMode;
-  document.body.classList.toggle("edit",editMode);
-  document.getElementById("editBtn").textContent=editMode?"완료":"편집";
-  renderAll();
+  editMode=!editMode; document.body.classList.toggle("edit",editMode);
+  document.getElementById("editBtn").textContent=editMode?"완료":"편집"; renderAll();
 };
 document.getElementById("statusBtn").onclick=()=>{
   const s=document.getElementById("status"); const open=s.classList.toggle("show");
   document.getElementById("statusBtn").textContent=open?"📊 전체 현황 닫기":"📊 전체 날짜 식수 현황 보기";
 };
-
 renderAll();
 </script>
 </body>
