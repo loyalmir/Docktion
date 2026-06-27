@@ -201,21 +201,22 @@ try{
     connected = s.val()===true;
     document.getElementById("dot").classList.toggle("on", connected);
     document.getElementById("connTxt").textContent = connected ? "실시간 연결됨" : "연결 끊김";
-    maybeInit();
   });
   db.ref(DB_PATH).on("value", snap=>{
     data = snap.val() || {};
     roster = data._roster || DEFAULT_ROSTER;
     dates  = data._dates  || DEFAULT_DATES.slice();
-    maybeInit(); renderAll();
+    initIfEmpty(); renderAll();
   });
 }catch(e){ document.getElementById("connTxt").textContent="설정 필요"; console.error(e); renderAll(); }
-function maybeInit(){
-  if(!db || !connected || initing) return;
-  const need={};
-  if(!data._roster) need._roster=DEFAULT_ROSTER;
-  if(!data._dates)  need._dates =DEFAULT_DATES;
-  if(Object.keys(need).length){ initing=true; db.ref(DB_PATH).update(need); }
+/* DB가 "정말로" 비어있을 때만 기본값을 1회 생성.
+   트랜잭션으로 서버의 현재값을 직접 보고 판단하므로, 이미 저장된
+   명단/날짜를 절대 덮어쓰지 않음 (편집 내용 보존). */
+function initIfEmpty(){
+  if(!db || initing) return;
+  initing=true;
+  db.ref(DB_PATH+"/_roster").transaction(cur => (cur==null) ? DEFAULT_ROSTER : undefined);
+  db.ref(DB_PATH+"/_dates").transaction(cur => (cur==null) ? DEFAULT_DATES : undefined);
 }
 
 /* ===== 날짜 ===== */
