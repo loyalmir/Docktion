@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>문화부 식수 인원 체크</title>
+<title>독션 식수체크</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
 <style>
   :root{
@@ -33,17 +33,27 @@
   .tab.active{background:var(--ink);border-color:var(--ink);}
   .tab.active b,.tab.active span{color:#fff;}
 
+  .date-edit{display:none;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:12px;}
+  body.edit .date-edit{display:block;}
+  .de-title{font-size:12px;font-weight:800;color:var(--ink-soft);margin-bottom:8px;}
+  .de-chips{display:flex;flex-wrap:wrap;gap:7px;}
+  .de-chip{display:flex;align-items:center;gap:5px;border:1.5px solid var(--line);border-radius:10px;padding:5px 8px;font-size:13px;font-weight:700;background:#faf8f3;}
+  .de-chip .wd{color:var(--ink-soft);font-weight:600;}
+  .de-chip .mini{width:22px;height:22px;border-radius:6px;border:none;background:none;cursor:pointer;font-size:14px;padding:0;color:var(--ink-soft);}
+  .de-chip .mini.del{color:var(--x);font-weight:800;}
+  .de-add{border:1.5px dashed var(--line);background:transparent;color:var(--ink-soft);font-family:inherit;font-weight:800;font-size:13px;border-radius:10px;padding:6px 11px;cursor:pointer;}
+
   .summary{display:flex;gap:10px;padding-bottom:14px;}
-  .scard{flex:1;background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:13px 15px;display:flex;align-items:center;justify-content:space-between;}
+  .scard{flex:1;background:var(--card);border:1.5px solid #cfe9d8;border-radius:16px;padding:13px 15px;display:flex;align-items:center;justify-content:space-between;}
   .scard .lab{font-size:13px;font-weight:700;color:var(--ink-soft);}
   .scard .num{font-size:30px;font-weight:800;letter-spacing:-0.03em;line-height:1;color:var(--o);}
   .scard .num small{font-size:14px;font-weight:700;color:var(--ink-soft);margin-left:2px;}
-  .scard{border-color:#cfe9d8;}
 
   .card{background:var(--card);border:1.5px solid var(--line);border-radius:16px;margin-bottom:12px;overflow:hidden;}
   .card-head{display:flex;align-items:center;justify-content:space-between;padding:11px 15px;border-bottom:1px solid var(--line);background:#faf8f3;gap:10px;}
   .card-name{font-size:15px;font-weight:800;letter-spacing:-0.02em;display:flex;align-items:center;gap:8px;}
   .card-name.mgr{color:var(--mgr);}
+  .card-name-edit{font-family:inherit;font-size:15px;font-weight:800;letter-spacing:-0.02em;color:var(--ink);background:none;border:none;padding:0;cursor:pointer;display:flex;align-items:center;gap:6px;}
   .card-sub{font-size:12px;font-weight:700;color:var(--ink-soft);white-space:nowrap;}
   .card-sub i{font-style:normal;color:var(--o);}
   .team-del{width:26px;height:26px;border-radius:8px;border:1.5px solid #f0c0c0;background:#fff;color:var(--x);font-weight:800;font-size:15px;line-height:1;cursor:pointer;padding:0;display:none;}
@@ -95,7 +105,7 @@
 <body>
 <div class="wrap">
   <header>
-    <h1>문화부 식수 인원 체크</h1>
+    <h1>독션 식수체크</h1>
     <div class="htools">
       <div class="conn"><span class="dot" id="dot"></span><span id="connTxt">연결 중…</span></div>
       <button class="edit-btn" id="editBtn">편집</button>
@@ -103,6 +113,7 @@
   </header>
 
   <div class="sticky"><div class="tabs" id="tabs"></div></div>
+  <div class="date-edit" id="dateEdit"></div>
 
   <div class="summary">
     <div class="scard"><span class="lab">🍚 점심 (O)</span><span class="num" id="sumL">0<small>명</small></span></div>
@@ -116,7 +127,7 @@
 
   <footer>
     칸을 누르면 <b>미정(·) → O(먹음) → X(안먹음)</b> 순서로 바뀝니다<br>
-    [편집]을 누르면 매니저·팀장·팀원 이름을 추가/삭제할 수 있어요
+    [편집]에서 날짜·매니저·팀장·팀원을 추가/수정/삭제할 수 있어요
   </footer>
 </div>
 
@@ -131,9 +142,11 @@ const firebaseConfig = {
   databaseURL: "https://k-hary-default-rtdb.firebaseio.com"
 };
 const DB_PATH = "siksu_2026_06";
+const YEAR = 2026;                 // 요일 자동계산 기준 연도
+const KDAY = ["일","월","화","수","목","금","토"];
 
-/* ===== 날짜 ===== */
-const DATES = [
+/* ===== 기본 날짜 (Firebase에 없을 때만 처음 1회 생성) ===== */
+const DEFAULT_DATES = [
   { key:"0627", label:"6/27", day:"토" },
   { key:"0628", label:"6/28", day:"일" },
   { key:"0629", label:"6/29", day:"월" },
@@ -144,7 +157,7 @@ const DATES = [
   { key:"0708", label:"7/8",  day:"수" },
 ];
 
-/* ===== 기본 명단 (Firebase에 명단이 없을 때만 처음 1회 생성) ===== */
+/* ===== 기본 명단 (Firebase에 없을 때만 처음 1회 생성) ===== */
 const INIT_TEAMS = [
   { leader:"남이슬", members:["안연주","김보겸","이예희","김태인","이서연","조유정","박현후"] },
   { leader:"김건하", members:["손주환","염창민","조현석","임동휘","하희중","이승재"] },
@@ -164,8 +177,9 @@ function buildDefaultRoster(){
 const DEFAULT_ROSTER = buildDefaultRoster();
 
 /* ===== 상태 ===== */
-let db=null, data={}, roster=DEFAULT_ROSTER, connected=false, editMode=false, initing=false;
-let selected = DATES[0].key;
+let db=null, data={}, roster=DEFAULT_ROSTER, dates=DEFAULT_DATES.slice();
+let connected=false, editMode=false, initing=false;
+let selected = DEFAULT_DATES[0].key;
 
 /* ===== Firebase ===== */
 try{
@@ -175,137 +189,149 @@ try{
     connected = s.val()===true;
     document.getElementById("dot").classList.toggle("on", connected);
     document.getElementById("connTxt").textContent = connected ? "실시간 연결됨" : "연결 끊김";
+    maybeInit();
   });
   db.ref(DB_PATH).on("value", snap=>{
     data = snap.val() || {};
-    if(data._roster){ roster = data._roster; }
-    else if(db && !initing){ initing=true; db.ref(DB_PATH+"/_roster").set(DEFAULT_ROSTER); return; }
+    roster = data._roster || DEFAULT_ROSTER;
+    dates  = data._dates  || DEFAULT_DATES.slice();
+    maybeInit();
     renderAll();
   });
 }catch(e){
   document.getElementById("connTxt").textContent = "설정 필요";
-  console.error(e);
-  renderAll();
+  console.error(e); renderAll();
+}
+function maybeInit(){
+  if(!db || !connected || initing) return;
+  const need={};
+  if(!data._roster) need._roster=DEFAULT_ROSTER;
+  if(!data._dates)  need._dates =DEFAULT_DATES;
+  if(Object.keys(need).length){ initing=true; db.ref(DB_PATH).update(need); }
 }
 
-/* ===== helper ===== */
-function nameOf(id){ return (roster.names && roster.names[id]) || id; }
-function teamList(){
-  const t=roster.teams||{};
-  return Object.keys(t).map(k=>Object.assign({key:k},t[k])).sort((a,b)=>(a.seq||0)-(b.seq||0));
+/* ===== 날짜 helper ===== */
+function parseMD(s){ const m=String(s).match(/(\d{1,2})\s*[\/.\-월]\s*(\d{1,2})/); return m?{mo:+m[1],d:+m[2]}:null; }
+function mkDate(s){ const p=parseMD(s); if(!p)return null; return {label:p.mo+"/"+p.d, day:KDAY[new Date(YEAR,p.mo-1,p.d).getDay()]}; }
+function sortedDates(){
+  return dates.slice().sort((a,b)=>{
+    const pa=parseMD(a.label)||{mo:99,d:99}, pb=parseMD(b.label)||{mo:99,d:99};
+    return (pa.mo*100+pa.d)-(pb.mo*100+pb.d);
+  });
 }
+
+/* ===== 명단 helper ===== */
+function nameOf(id){ return (roster.names && roster.names[id]) || id; }
+function teamList(){ const t=roster.teams||{}; return Object.keys(t).map(k=>Object.assign({key:k},t[k])).sort((a,b)=>(a.seq||0)-(b.seq||0)); }
 function memberIds(tm){ return tm.members||[]; }
 function managerIds(){ return roster.managers||[]; }
-function allIds(){
-  const ids=[...managerIds()];
-  teamList().forEach(tm=>{ if(tm.leader) ids.push(tm.leader); ids.push(...memberIds(tm)); });
-  return ids;
-}
-function val(dk,meal,id){
-  const v = data && data[dk] && data[dk][meal] ? data[dk][meal][id] : undefined;
-  if(v===true) return "O";        // 옛 데이터 호환
-  return (v==="O"||v==="X") ? v : null;
-}
+function allIds(){ const ids=[...managerIds()]; teamList().forEach(tm=>{ if(tm.leader)ids.push(tm.leader); ids.push(...memberIds(tm)); }); return ids; }
+function val(dk,meal,id){ const v=data&&data[dk]&&data[dk][meal]?data[dk][meal][id]:undefined; if(v===true)return "O"; return (v==="O"||v==="X")?v:null; }
 function countIds(ids,dk,meal){ return ids.filter(id=>val(dk,meal,id)==="O").length; }
 function countMeal(dk,meal){ return countIds(allIds(),dk,meal); }
 
-/* ===== 체크 (미정→O→X→미정) ===== */
+/* ===== 체크 ===== */
 function cycle(id,meal){
   if(!db||!connected){ alert("실시간 연결 후 사용하세요."); return; }
   const cur=val(selected,meal,id);
-  const next = cur==="O" ? "X" : cur==="X" ? null : "O";
+  const next= cur==="O" ? "X" : cur==="X" ? null : "O";
   db.ref(`${DB_PATH}/${selected}/${meal}/${id}`).set(next);
 }
 
-/* ===== 명단 편집 ===== */
+/* ===== 편집 공통 ===== */
 function rRef(){ return db.ref(DB_PATH+"/_roster"); }
 function newId(){ return "p_"+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 function guard(){ if(!db||!connected){ alert("실시간 연결 후 편집하세요."); return false; } return true; }
+function clearAtt(id){ dates.forEach(d=>{ db.ref(`${DB_PATH}/${d.key}/lunch/${id}`).set(null); db.ref(`${DB_PATH}/${d.key}/dinner/${id}`).set(null); }); }
 
-function addManager(){
-  if(!guard())return; const nm=prompt("매니저 이름"); if(!nm||!nm.trim())return;
-  const id=newId(), u={};
-  u["names/"+id]=nm.trim(); u["managers"]=[...managerIds(),id];
-  rRef().update(u);
+/* ===== 날짜 편집 ===== */
+function addDate(){
+  if(!guard())return; const s=prompt("추가할 날짜 (예: 7/10)"); if(!s)return;
+  const md=mkDate(s); if(!md){ alert("날짜 형식이 올바르지 않아요. 예: 7/10"); return; }
+  db.ref(DB_PATH+"/_dates").set([...dates,{key:"d_"+Date.now().toString(36),label:md.label,day:md.day}]);
 }
-function addMember(tk){
-  if(!guard())return; const nm=prompt("팀원 이름"); if(!nm||!nm.trim())return;
-  const id=newId(), u={};
-  u["names/"+id]=nm.trim(); u["teams/"+tk+"/members"]=[...(roster.teams[tk].members||[]),id];
-  rRef().update(u);
+function editDate(key){
+  if(!guard())return; const cur=dates.find(d=>d.key===key); if(!cur)return;
+  const s=prompt("날짜 수정 (예: 7/10)",cur.label); if(s===null)return;
+  const md=mkDate(s); if(!md){ alert("날짜 형식이 올바르지 않아요. 예: 7/10"); return; }
+  db.ref(DB_PATH+"/_dates").set(dates.map(d=>d.key===key?{key:d.key,label:md.label,day:md.day}:d));
 }
-function addTeam(){
-  if(!guard())return; const nm=prompt("새 팀장 이름"); if(!nm||!nm.trim())return;
+function delDate(key){
+  if(!guard())return;
+  if(dates.length<=1){ alert("최소 1개 날짜는 남겨주세요."); return; }
+  const cur=dates.find(d=>d.key===key);
+  if(!confirm((cur?cur.label:"")+" 날짜를 삭제할까요? (해당 날짜 체크 내용도 사라집니다)"))return;
+  db.ref(DB_PATH+"/_dates").set(dates.filter(d=>d.key!==key));
+  db.ref(DB_PATH+"/"+key).set(null);
+}
+
+/* ===== 명단 편집 ===== */
+function addManager(){ if(!guard())return; const nm=prompt("매니저 이름"); if(!nm||!nm.trim())return;
+  const id=newId(),u={}; u["names/"+id]=nm.trim(); u["managers"]=[...managerIds(),id]; rRef().update(u); }
+function addMember(tk){ if(!guard())return; const nm=prompt("팀원 이름"); if(!nm||!nm.trim())return;
+  const id=newId(),u={}; u["names/"+id]=nm.trim(); u["teams/"+tk+"/members"]=[...(roster.teams[tk].members||[]),id]; rRef().update(u); }
+function addTeam(){ if(!guard())return; const nm=prompt("새 팀장 이름"); if(!nm||!nm.trim())return;
   const id=newId(); let n=0; while(roster.teams&&roster.teams["t"+n])n++;
-  const u={};
-  u["names/"+id]=nm.trim(); u["teams/t"+n]={ seq:teamList().length, leader:id, members:[] };
-  rRef().update(u);
-}
-function renamePerson(id){
-  if(!guard())return; const nm=prompt("이름 수정", nameOf(id)); if(nm===null||!nm.trim())return;
-  rRef().child("names/"+id).set(nm.trim());
-}
-function clearAtt(id){ DATES.forEach(d=>{ db.ref(`${DB_PATH}/${d.key}/lunch/${id}`).set(null); db.ref(`${DB_PATH}/${d.key}/dinner/${id}`).set(null); }); }
-function delManager(id){
-  if(!guard())return; if(!confirm(nameOf(id)+" 삭제?"))return;
-  const u={}; u["managers"]=managerIds().filter(x=>x!==id); u["names/"+id]=null;
-  rRef().update(u); clearAtt(id);
-}
-function delMember(tk,id){
-  if(!guard())return; if(!confirm(nameOf(id)+" 삭제?"))return;
-  const u={}; u["teams/"+tk+"/members"]=(roster.teams[tk].members||[]).filter(x=>x!==id); u["names/"+id]=null;
-  rRef().update(u); clearAtt(id);
-}
-function delTeam(tk){
-  if(!guard())return; const tm=roster.teams[tk];
+  const u={}; u["names/"+id]=nm.trim(); u["teams/t"+n]={seq:teamList().length,leader:id,members:[]}; rRef().update(u); }
+function renamePerson(id){ if(!guard())return; const nm=prompt("이름 수정",nameOf(id)); if(nm===null||!nm.trim())return;
+  rRef().child("names/"+id).set(nm.trim()); }
+function delManager(id){ if(!guard())return; if(!confirm(nameOf(id)+" 삭제?"))return;
+  const u={}; u["managers"]=managerIds().filter(x=>x!==id); u["names/"+id]=null; rRef().update(u); clearAtt(id); }
+function delMember(tk,id){ if(!guard())return; if(!confirm(nameOf(id)+" 삭제?"))return;
+  const u={}; u["teams/"+tk+"/members"]=(roster.teams[tk].members||[]).filter(x=>x!==id); u["names/"+id]=null; rRef().update(u); clearAtt(id); }
+function delTeam(tk){ if(!guard())return; const tm=roster.teams[tk];
   if(!confirm(nameOf(tm.leader)+"팀 전체를 삭제할까요?"))return;
-  const u={}; u["teams/"+tk]=null; u["names/"+tm.leader]=null;
-  (tm.members||[]).forEach(id=>u["names/"+id]=null);
-  rRef().update(u); clearAtt(tm.leader); (tm.members||[]).forEach(clearAtt);
-}
+  const u={}; u["teams/"+tk]=null; u["names/"+tm.leader]=null; (tm.members||[]).forEach(id=>u["names/"+id]=null);
+  rRef().update(u); clearAtt(tm.leader); (tm.members||[]).forEach(clearAtt); }
 
 /* ===== 렌더 ===== */
-function cellHtml(id,meal){
-  const v=val(selected,meal,id);
-  const cls=v==="O"?"o":v==="X"?"x":"";
-  const g=v==="O"?"O":v==="X"?"X":"·";
-  return `<button class="cell ${cls}" data-act="cell" data-id="${id}" data-meal="${meal}">${g}</button>`;
-}
-function rowHtml(id, role, tk){
+function cellHtml(id,meal){ const v=val(selected,meal,id); const cls=v==="O"?"o":v==="X"?"x":""; const g=v==="O"?"O":v==="X"?"X":"·";
+  return `<button class="cell ${cls}" data-act="cell" data-id="${id}" data-meal="${meal}">${g}</button>`; }
+function rowHtml(id,role,tk){
   const nm=nameOf(id);
-  const badge = role==="leader"?'<span class="badge l">팀장</span>'
-            : role==="manager"?'<span class="badge m">매니저</span>':'';
-  const nameEl = editMode
+  const badge= role==="leader"?'<span class="badge l">팀장</span>': role==="manager"?'<span class="badge m">매니저</span>':'';
+  const nameEl= editMode
     ? `<button class="nm-edit" data-act="rename" data-id="${id}">${nm}${badge}<span class="pen">✎</span></button>`
     : `<span class="nm">${nm}${badge}</span>`;
-  const delAct = role==="manager"?"delMgr":role==="leader"?"delTeam":"delMem";
-  const del = editMode ? `<button class="del" data-act="${delAct}" data-id="${id}" data-team="${tk||''}">×</button>` : `<span></span>`;
+  const delAct= role==="manager"?"delMgr":role==="leader"?"delTeam":"delMem";
+  const del= editMode ? `<button class="del" data-act="${delAct}" data-id="${id}" data-team="${tk||''}">×</button>` : `<span></span>`;
   return `<div class="row">${nameEl}<div class="cells">${cellHtml(id,"lunch")}${cellHtml(id,"dinner")}</div>${del}</div>`;
 }
 function colHead(){ return `<div class="col-head"><span></span><div class="labs"><span>점심</span><span>저녁</span></div><span></span></div>`; }
 
+function renderTabs(){
+  const el=document.getElementById("tabs");
+  el.innerHTML=sortedDates().map(d=>`<div class="tab ${d.key===selected?'active':''}" data-k="${d.key}"><b>${d.label}</b><span>${d.day}</span></div>`).join("");
+  el.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{selected=t.dataset.k;renderAll();});
+}
+function renderDateEdit(){
+  const chips=sortedDates().map(d=>`<div class="de-chip"><b>${d.label}</b> <span class="wd">${d.day}</span>
+    <button class="mini" data-act="editDate" data-key="${d.key}">✎</button>
+    <button class="mini del" data-act="delDate" data-key="${d.key}">×</button></div>`).join("");
+  document.getElementById("dateEdit").innerHTML=
+    `<div class="de-title">📅 날짜 관리 (추가 · 수정 · 삭제)</div><div class="de-chips">${chips}<button class="de-add" data-act="addDate">+ 날짜 추가</button></div>`;
+}
+function renderSummary(){
+  document.getElementById("sumL").innerHTML=countMeal(selected,"lunch")+'<small>명</small>';
+  document.getElementById("sumD").innerHTML=countMeal(selected,"dinner")+'<small>명</small>';
+}
 function renderApp(){
   let html="";
-  // 매니저 카드
   const mids=managerIds();
-  const ml=countIds(mids,selected,"lunch"), md=countIds(mids,selected,"dinner");
-  html+=`<div class="card">
-    <div class="card-head"><div class="card-name mgr">매니저</div>
-      <div class="card-sub">점심 <i>${ml}</i> · 저녁 <i>${md}</i></div></div>`;
+  html+=`<div class="card"><div class="card-head"><div class="card-name mgr">매니저</div>
+    <div class="card-sub">점심 <i>${countIds(mids,selected,"lunch")}</i> · 저녁 <i>${countIds(mids,selected,"dinner")}</i></div></div>`;
   if(mids.length) html+=colHead()+mids.map(id=>rowHtml(id,"manager")).join("");
   html+=`<div class="add-row"><button class="add-btn" data-act="addMgr">+ 매니저 추가</button></div></div>`;
-  // 팀 카드
   teamList().forEach(tm=>{
     const ids=[tm.leader,...memberIds(tm)].filter(Boolean);
-    const cl=countIds(ids,selected,"lunch"), cd=countIds(ids,selected,"dinner");
-    html+=`<div class="card">
-      <div class="card-head">
-        <div class="card-name">${nameOf(tm.leader)} 팀</div>
-        <div style="display:flex;align-items:center;gap:10px">
-          <div class="card-sub">점심 <i>${cl}</i> · 저녁 <i>${cd}</i></div>
-          <button class="team-del" data-act="delTeam" data-team="${tm.key}">×</button>
-        </div>
-      </div>${colHead()}`;
+    const nameEl= editMode
+      ? `<button class="card-name-edit" data-act="rename" data-id="${tm.leader}">${nameOf(tm.leader)} 팀 <span class="pen">✎</span></button>`
+      : `<div class="card-name">${nameOf(tm.leader)} 팀</div>`;
+    html+=`<div class="card"><div class="card-head">${nameEl}
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="card-sub">점심 <i>${countIds(ids,selected,"lunch")}</i> · 저녁 <i>${countIds(ids,selected,"dinner")}</i></div>
+        <button class="team-del" data-act="delTeam" data-team="${tm.key}">×</button>
+      </div></div>${colHead()}`;
     if(tm.leader) html+=rowHtml(tm.leader,"leader",tm.key);
     html+=memberIds(tm).map(id=>rowHtml(id,"member",tm.key)).join("");
     html+=`<div class="add-row"><button class="add-btn" data-act="addMem" data-team="${tm.key}">+ 팀원 추가</button></div></div>`;
@@ -313,41 +339,39 @@ function renderApp(){
   html+=`<button class="add-btn add-team" data-act="addTeam">+ 팀 추가</button>`;
   document.getElementById("app").innerHTML=html;
 }
-
-function renderTabs(){
-  const el=document.getElementById("tabs");
-  el.innerHTML=DATES.map(d=>`<div class="tab ${d.key===selected?'active':''}" data-k="${d.key}"><b>${d.label}</b><span>${d.day}</span></div>`).join("");
-  el.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{selected=t.dataset.k;renderAll();});
-}
-function renderSummary(){
-  document.getElementById("sumL").innerHTML=countMeal(selected,"lunch")+'<small>명</small>';
-  document.getElementById("sumD").innerHTML=countMeal(selected,"dinner")+'<small>명</small>';
-}
 function renderStatus(){
   let tl=0,td=0;
-  const rows=DATES.map(d=>{
-    const l=countMeal(d.key,"lunch"),dn=countMeal(d.key,"dinner"); tl+=l;td+=dn;
-    return `<tr class="${d.key===selected?'cur':''}"><td class="day">${d.label}<span>${d.day}</span></td><td class="v">${l}</td><td class="v">${dn}</td></tr>`;
-  }).join("");
+  const rows=sortedDates().map(d=>{ const l=countMeal(d.key,"lunch"),dn=countMeal(d.key,"dinner"); tl+=l;td+=dn;
+    return `<tr class="${d.key===selected?'cur':''}"><td class="day">${d.label}<span>${d.day}</span></td><td class="v">${l}</td><td class="v">${dn}</td></tr>`; }).join("");
   document.getElementById("status").innerHTML=`<table>
     <thead><tr><th style="text-align:left;padding-left:14px">날짜</th><th>🍚 점심</th><th>🌙 저녁</th></tr></thead>
     <tbody>${rows}<tr class="total"><td class="day">합계</td><td>${tl}</td><td>${td}</td></tr></tbody></table>`;
 }
-function renderAll(){ renderTabs(); renderSummary(); renderApp(); renderStatus(); }
+function renderAll(){
+  if(!dates.some(d=>d.key===selected)){ const s=sortedDates()[0]; selected=s?s.key:null; }
+  renderTabs(); renderDateEdit(); renderSummary(); renderApp(); renderStatus();
+}
 
-/* ===== 이벤트 위임 ===== */
-document.getElementById("app").addEventListener("click", e=>{
+/* ===== 이벤트 ===== */
+function handleClick(e){
   const b=e.target.closest("button"); if(!b)return;
-  const a=b.dataset.act, id=b.dataset.id, tk=b.dataset.team;
-  if(a==="cell") cycle(id,b.dataset.meal);
-  else if(a==="rename") renamePerson(id);
-  else if(a==="delMgr") delManager(id);
-  else if(a==="delMem") delMember(tk,id);
-  else if(a==="delTeam") delTeam(tk);
-  else if(a==="addMgr") addManager();
-  else if(a==="addMem") addMember(tk);
-  else if(a==="addTeam") addTeam();
-});
+  const a=b.dataset.act, id=b.dataset.id, tk=b.dataset.team, key=b.dataset.key;
+  switch(a){
+    case "cell": cycle(id,b.dataset.meal); break;
+    case "rename": renamePerson(id); break;
+    case "delMgr": delManager(id); break;
+    case "delMem": delMember(tk,id); break;
+    case "delTeam": delTeam(tk); break;
+    case "addMgr": addManager(); break;
+    case "addMem": addMember(tk); break;
+    case "addTeam": addTeam(); break;
+    case "addDate": addDate(); break;
+    case "editDate": editDate(key); break;
+    case "delDate": delDate(key); break;
+  }
+}
+document.getElementById("app").addEventListener("click",handleClick);
+document.getElementById("dateEdit").addEventListener("click",handleClick);
 document.getElementById("editBtn").onclick=()=>{
   editMode=!editMode;
   document.body.classList.toggle("edit",editMode);
@@ -355,8 +379,7 @@ document.getElementById("editBtn").onclick=()=>{
   renderAll();
 };
 document.getElementById("statusBtn").onclick=()=>{
-  const s=document.getElementById("status");
-  const open=s.classList.toggle("show");
+  const s=document.getElementById("status"); const open=s.classList.toggle("show");
   document.getElementById("statusBtn").textContent=open?"📊 전체 현황 닫기":"📊 전체 날짜 식수 현황 보기";
 };
 
