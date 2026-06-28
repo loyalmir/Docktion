@@ -49,6 +49,8 @@
 
   .summary{display:flex;gap:10px;padding-bottom:14px;}
   .scard{flex:1;background:var(--card);border:1.5px solid #cfe9d8;border-radius:16px;padding:13px 15px;display:flex;align-items:center;justify-content:space-between;}
+  .scard.sc-v{border-color:#f0c2c2;}
+  .scard.sc-v .num{color:var(--x);}
   .scard .lab{font-size:13px;font-weight:700;color:var(--ink-soft);}
   .scard .num{font-size:30px;font-weight:800;letter-spacing:-0.03em;line-height:1;color:var(--o);}
   .scard .num small{font-size:14px;font-weight:700;color:var(--ink-soft);margin-left:2px;}
@@ -82,6 +84,10 @@
   .cell:active{transform:scale(.9);}
   .cell.o{background:var(--o);border-color:var(--o);color:#fff;}
   .cell.x{background:#fdecec;border-color:#f0b4b4;color:var(--x);}
+  .cell.v{background:var(--x);border-color:var(--x);color:#fff;}
+  .cell.sep{margin-left:10px;position:relative;}
+  .cell.sep::before{content:"";position:absolute;left:-6px;top:2px;bottom:2px;width:1.5px;background:var(--line);}
+  .labs span.sep{margin-left:10px;}
 
   .del{width:30px;height:30px;border-radius:8px;border:1.5px solid #f0c0c0;background:#fff;color:var(--x);font-weight:800;font-size:18px;line-height:1;cursor:pointer;padding:0;}
   .pro{width:30px;height:30px;border-radius:8px;border:1.5px solid #ead9c4;background:#fff;font-size:15px;line-height:1;cursor:pointer;padding:0;}
@@ -128,7 +134,7 @@
   <div class="summary">
     <div class="scard"><span class="lab">🍚 점심 (O)</span><span class="num" id="sumL">0<small>명</small></span></div>
     <div class="scard"><span class="lab">🌙 저녁 (O)</span><span class="num" id="sumD">0<small>명</small></span></div>
-    <div class="scard"><span class="lab">✓ 체크</span><span class="num" id="sumE">0<small>명</small></span></div>
+    <div class="scard sc-v"><span class="lab">🚩 도착</span><span class="num" id="sumE">0<small>명</small></span></div>
   </div>
 
   <div id="app"></div>
@@ -294,7 +300,7 @@ function delTeam(tk){ if(!guard())return; const tm=roster.teams[tk]; if(!confirm
 function cellHtml(id,meal){ const v=val(selected,meal,id); const cls=v==="O"?"o":v==="X"?"x":""; const g=v==="O"?"O":v==="X"?"X":"·";
   return `<button class="cell ${cls}" data-act="cell" data-id="${id}" data-meal="${meal}">${g}</button>`; }
 function cellV(id){ const on=val(selected,"etc",id)==="V";
-  return `<button class="cell ${on?'o':''}" data-act="cellV" data-id="${id}">${on?'V':'·'}</button>`; }
+  return `<button class="cell sep ${on?'v':''}" data-act="cellV" data-id="${id}">${on?'V':'·'}</button>`; }
 function badgeHtml(role){ return role==="leader"?'<span class="badge l">팀장</span>':role==="manager"?'<span class="badge m">관리자</span>':''; }
 function rowHtml(id,role,tk){
   const nm=nameOf(id), badge=badgeHtml(role);
@@ -309,8 +315,8 @@ function rowHtml(id,role,tk){
   return `<div class="row e">${nameBtn}<div class="cells">${cellHtml(id,"lunch")}${cellHtml(id,"dinner")}${cellV(id)}</div>${promote}${del}</div>`;
 }
 function colHead(){ return editMode
-  ? `<div class="col-head e"><span></span><div class="labs"><span>점심</span><span>저녁</span><span>✓</span></div><span></span><span></span></div>`
-  : `<div class="col-head n"><span></span><div class="labs"><span>점심</span><span>저녁</span><span>✓</span></div></div>`; }
+  ? `<div class="col-head e"><span></span><div class="labs"><span>점심</span><span>저녁</span><span class="sep">도착</span></div><span></span><span></span></div>`
+  : `<div class="col-head n"><span></span><div class="labs"><span>점심</span><span>저녁</span><span class="sep">도착</span></div></div>`; }
 
 function renderTabs(){
   const el=document.getElementById("tabs");
@@ -335,7 +341,7 @@ function renderApp(){
   const mvis= mids.filter(id=>!isOff(selected,id));
   if(editMode || mvis.length){
     html+=`<div class="card"><div class="card-head"><div class="card-name mgr">관리자</div>
-      <div class="card-sub">점심 <i>${countIds(mids,selected,"lunch")}</i> · 저녁 <i>${countIds(mids,selected,"dinner")}</i> · ✓ <i>${countV(mids,selected)}</i></div></div>`;
+      <div class="card-sub">점심 <i>${countIds(mids,selected,"lunch")}</i> · 저녁 <i>${countIds(mids,selected,"dinner")}</i> · 도착 <i>${countV(mids,selected)}</i></div></div>`;
     if(mvis.length) html+=colHead()+mvis.map(id=>rowHtml(id,"manager")).join("");
     html+=`<div class="add-row"><button class="add-btn" data-act="addMgr">+ 관리자 추가</button></div></div>`;
   }
@@ -349,7 +355,7 @@ function renderApp(){
       : `<div class="card-name">${nameOf(tm.leader)} 팀</div>`;
     html+=`<div class="card"><div class="card-head">${nameEl}
       <div style="display:flex;align-items:center;gap:10px">
-        <div class="card-sub">점심 <i>${countIds(ids,selected,"lunch")}</i> · 저녁 <i>${countIds(ids,selected,"dinner")}</i> · ✓ <i>${countV(ids,selected)}</i></div>
+        <div class="card-sub">점심 <i>${countIds(ids,selected,"lunch")}</i> · 저녁 <i>${countIds(ids,selected,"dinner")}</i> · 도착 <i>${countV(ids,selected)}</i></div>
         <button class="team-del" data-act="delTeam" data-team="${tm.key}">×</button>
       </div></div>`;
     if(vis.length) html+=colHead();
