@@ -72,10 +72,12 @@
   .labs{display:flex;gap:6px;}
   .labs span{width:46px;text-align:center;font-size:11px;font-weight:800;color:var(--ink-soft);}
   .col-head.n{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 15px 2px;}
-  .col-head.e{display:grid;grid-template-columns:1fr auto 30px 30px;gap:8px;align-items:center;padding:8px 15px 2px;}
+  .col-head.e{display:grid;grid-template-columns:24px 1fr auto 30px 30px;gap:8px;align-items:center;padding:8px 15px 2px;}
 
   .row.n{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 15px;border-top:1px solid #f1ede4;}
-  .row.e{display:grid;grid-template-columns:1fr auto 30px 30px;gap:8px;align-items:center;padding:8px 15px;border-top:1px solid #f1ede4;}
+  .row.e{display:grid;grid-template-columns:24px 1fr auto 30px 30px;gap:8px;align-items:center;padding:8px 15px;border-top:1px solid #f1ede4;}
+  .grip{width:24px;height:32px;border:none;background:none;color:#c3bdb0;font-size:17px;line-height:1;cursor:grab;padding:0;touch-action:none;}
+  .row.e.dragging{opacity:.9;background:#f3efe6;box-shadow:0 5px 14px rgba(0,0,0,.14);border-radius:10px;position:relative;z-index:5;}
   .row.off{opacity:.42;}
   .nm{font-size:15px;font-weight:600;display:flex;align-items:center;gap:7px;min-width:0;}
   .nm-edit{background:none;border:none;font-family:inherit;font-size:15px;font-weight:600;color:var(--ink);text-align:left;padding:0;cursor:pointer;display:flex;align-items:center;gap:7px;min-width:0;}
@@ -205,7 +207,7 @@ const DEFAULT_ROSTER = buildDefaultRoster();
 
 /* ===== 상태 ===== */
 let db=null, data={}, roster=DEFAULT_ROSTER, dates=DEFAULT_DATES.slice();
-let connected=false, editMode=false, initing=false;
+let connected=false, editMode=false, initing=false, dragState=null;
 let selected = DEFAULT_DATES[0].key;
 
 /* ===== Firebase ===== */
@@ -321,11 +323,13 @@ function rowHtml(id,role,tk){
   const promote= role==="member"
     ? `<button class="pro" data-act="makeLeader" data-id="${id}" data-team="${tk}" title="팀장으로">👑</button>`
     : `<span></span>`;
+  const grip= role==="leader" ? `<span></span>`
+    : `<button class="grip" data-id="${id}" data-grp="${role==="manager"?"mgr":"team"}" data-team="${tk||''}">≡</button>`;
   const del=`<button class="del" data-act="dayDel" data-id="${id}">×</button>`;
-  return `<div class="row e">${nameBtn}<div class="cells">${cellHtml(id,"lunch")}${cellHtml(id,"dinner")}${cellV(id)}</div>${promote}${del}</div>`;
+  return `<div class="row e">${grip}${nameBtn}<div class="cells">${cellHtml(id,"lunch")}${cellHtml(id,"dinner")}${cellV(id)}</div>${promote}${del}</div>`;
 }
 function colHead(){ return editMode
-  ? `<div class="col-head e"><span></span><div class="labs"><span>점심</span><span>저녁</span><span class="sep">도착</span></div><span></span><span></span></div>`
+  ? `<div class="col-head e"><span></span><span></span><div class="labs"><span>점심</span><span>저녁</span><span class="sep">도착</span></div><span></span><span></span></div>`
   : `<div class="col-head n"><span></span><div class="labs"><span>점심</span><span>저녁</span><span class="sep">도착</span></div></div>`; }
 
 function renderTabs(){
@@ -384,6 +388,7 @@ function renderStatus(){
     <tbody>${rows}<tr class="total"><td class="day">합계</td><td>${tl}</td><td>${td}</td></tr></tbody></table>`;
 }
 function renderAll(){
+  if(dragState) return;
   if(!dates.some(d=>d.key===selected)){ const s=sortedDates()[0]; selected=s?s.key:null; }
   renderTabs(); renderDateEdit(); renderSummary(); renderApp(); renderStatus();
 }
@@ -474,6 +479,38 @@ function importExcel(file){
 }
 document.getElementById("importBtn").onclick=()=>document.getElementById("xlsxFile").click();
 document.getElementById("xlsxFile").onchange=e=>{ const f=e.target.files[0]; if(f)importExcel(f); e.target.value=""; };
+
+/* ===== 드래그로 순서 바꾸기 (팀원끼리 / 관리자끼리, 모든 날짜 공통) ===== */
+function dragRows(){ return dragState ? [...dragState.card.querySelectorAll(".row.e")].filter(r=>r.querySelector(".grip")) : []; }
+function onPointerDown(e){
+  const grip=e.target.closest(".grip"); if(!grip||!editMode||!db||!connected) return;
+  const row=grip.closest(".row"); if(!row) return;
+  e.preventDefault();
+  dragState={ grp:grip.dataset.grp, tk:grip.dataset.team||"", card:row.parentElement, row };
+  row.classList.add("dragging");
+  try{ row.setPointerCapture(e.pointerId); }catch(_){}
+}
+function onPointerMove(e){
+  if(!dragState) return; e.preventDefault();
+  const y=e.clientY, row=dragState.row;
+  const rows=dragRows(); let target=null;
+  for(const r of rows){ if(r===row) continue; const rc=r.getBoundingClientRect(); if(y < rc.top+rc.height/2){ target=r; break; } }
+  if(target){ if(target!==row.nextSibling) dragState.card.insertBefore(row,target); }
+  else { const last=rows[rows.length-1]; if(last&&last!==row) dragState.card.insertBefore(row,last.nextSibling); }
+}
+function onPointerUp(){
+  if(!dragState) return;
+  const {grp,tk,card,row}=dragState;
+  row.classList.remove("dragging");
+  const order=[...card.querySelectorAll(".row.e")].filter(r=>r.querySelector(".grip")).map(r=>r.querySelector(".grip").dataset.id);
+  dragState=null;
+  if(db&&connected){ if(grp==="mgr") rRef().child("managers").set(order); else rRef().child("teams/"+tk+"/members").set(order); }
+  else renderAll();
+}
+document.getElementById("app").addEventListener("pointerdown",onPointerDown);
+document.addEventListener("pointermove",onPointerMove,{passive:false});
+document.addEventListener("pointerup",onPointerUp);
+document.addEventListener("pointercancel",onPointerUp);
 
 renderAll();
 </script>
