@@ -188,7 +188,7 @@
 const firebaseConfig = {
   databaseURL: "https://k-hary-default-rtdb.firebaseio.com"
 };
-const DB_PATH = "siksu_2026_06";
+const DB_PATH = "siksu_docktion_v2";
 const YEAR = 2026;
 const KDAY = ["일","월","화","수","목","금","토"];
 
@@ -206,11 +206,12 @@ const DEFAULT_DATES = [
 
 /* ===== 기본 명단 (없을 때만 처음 1회 생성) ===== */
 const INIT_TEAMS = [
-  { leader:"남이슬", members:["안연주","김보겸","이예희","김태인","이서연","조유정","박현후"] },
-  { leader:"김건하", members:["손주환","염창민","조현석","임동휘","하희중","이승재"] },
-  { leader:"박웅비", members:["홍한위","강윤찬","최예찬","박지효","정진수","김지한"] },
-  { leader:"조상원", members:["문요원","박진홍","송하선","김우중","권태현","양희석","김한주"] },
-  { leader:"김성욱", members:["안진성","김주석","최준수","윤석현","이수연","김채민","노현서","채승민"] },
+  { leader:"남이슬", members:["안연주","이서연","조유정","박현후","홍선별","임단아","이경현","주현정"] },
+  { leader:"김태인", members:["이예희","전현지","윤석현","최준수","최보배","이혜빈","민다은","강다연"] },
+  { leader:"김건하", members:["손주환","염창민","임동휘","하희중","이승재","김규현","전재진"] },
+  { leader:"박웅비", members:["홍한위","박지효","김찬식","남덕영","원치현","허준영","이하은"] },
+  { leader:"조상원", members:["문요원","김우중","권태현","양희석","김채민","이수연","변정호"] },
+  { leader:"김성욱", members:["안진성","김주석","강윤찬","김해수","유민석","노현서","김지한"] },
 ];
 function buildDefaultRoster(){
   const teams={}, names={};
@@ -544,6 +545,10 @@ function onPointerMove(e){
     if(last && last!==row) card.insertBefore(row,last.nextSibling);
     else if(!rows.length){ const ch=card.querySelector(".col-head"); if(ch) ch.after(row); else card.appendChild(row); } }
 }
+function mergeHidden(domOrder, fullList){
+  const seen=new Set(domOrder);
+  return [...domOrder, ...(fullList||[]).filter(x=>!seen.has(x))];
+}
 function onPointerUp(){
   if(!dragState) return;
   const {id,srcGrp,srcTk,row}=dragState;
@@ -554,22 +559,25 @@ function onPointerUp(){
   if(!db||!connected||!card){ renderAll(); return; }
   const tgtGrp=card.dataset.grp, tgtTk=card.dataset.tk||"";
   const allRows=[...card.querySelectorAll(".row.e")];
-  const memberOrder=allRows.filter(r=>r.querySelector(".grip")).map(r=>r.querySelector(".grip").dataset.id);
+  const domOrder=allRows.filter(r=>r.querySelector(".grip")).map(r=>r.querySelector(".grip").dataset.id);
   const u={};
-  // 원래 자리에서 제거
+  // 원래 자리에서 제거 (roster 기준이라 숨겨진 인원도 안전)
   if(srcGrp==="mgr" && tgtGrp!=="mgr"){ u["managers"]=managerIds().filter(x=>x!==id); }
   else if(srcGrp==="team" && srcTk!==tgtTk){ u["teams/"+srcTk+"/members"]=(roster.teams[srcTk].members||[]).filter(x=>x!==id); }
   if(tgtGrp==="mgr"){
-    u["managers"]=memberOrder;
+    // 화면에 안 보이는(그날 제외된) 관리자까지 보존
+    u["managers"]=mergeHidden(domOrder, managerIds());
   } else {
     const tgtTeam=roster.teams[tgtTk]; if(!tgtTeam){ renderAll(); return; }
     const leaderRow=card.querySelector(".row.e.leaderrow");
     const promote = leaderRow && allRows.indexOf(row) < allRows.indexOf(leaderRow);
     if(promote){
+      const rest=mergeHidden(domOrder.filter(x=>x!==id), (tgtTeam.members||[]).filter(x=>x!==id));
       u["teams/"+tgtTk+"/leader"]=id;
-      u["teams/"+tgtTk+"/members"]=[tgtTeam.leader, ...memberOrder.filter(x=>x!==id)];
+      u["teams/"+tgtTk+"/members"]=[tgtTeam.leader, ...rest];
     } else {
-      u["teams/"+tgtTk+"/members"]=memberOrder;
+      // 화면에 안 보이는(그날 제외된) 팀원까지 보존
+      u["teams/"+tgtTk+"/members"]=mergeHidden(domOrder, tgtTeam.members);
     }
   }
   rRef().update(u);
