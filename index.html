@@ -22,6 +22,8 @@
   .dot{width:8px;height:8px;border-radius:50%;background:#cbb;transition:.3s;}
   .dot.on{background:var(--live);box-shadow:0 0 0 3px rgba(22,163,74,.18);}
   .edit-btn{border:1.5px solid var(--ink);background:#fff;color:var(--ink);font-family:inherit;font-size:13px;font-weight:800;border-radius:11px;padding:7px 13px;cursor:pointer;}
+  .lock-btn{border:1.5px solid var(--line);background:#fff;font-size:15px;border-radius:11px;padding:6px 9px;cursor:pointer;line-height:1;}
+  .lock-btn.on{border-color:var(--x);background:#fdecec;}
   body.edit .edit-btn{background:var(--ink);color:#fff;}
 
   .sticky{position:sticky;top:0;z-index:20;background:var(--paper);padding-top:6px;}
@@ -88,6 +90,7 @@
   .badge.l{background:var(--leader);} .badge.m{background:var(--mgr);}
 
   .cells{display:flex;gap:6px;}
+  body.locked-day .cell{opacity:.85;cursor:not-allowed;}
   .cell{width:46px;padding:8px 0;border:1.5px solid var(--line);background:#fff;border-radius:10px;font-family:inherit;font-weight:800;font-size:15px;color:#c3bdb0;cursor:pointer;transition:.12s;}
   .cell:active{transform:scale(.9);}
   .cell.o{background:var(--o);border-color:var(--o);color:#fff;}
@@ -128,6 +131,7 @@
     <h1>독션 식수체크</h1>
     <div class="htools">
       <div class="conn"><span class="dot" id="dot"></span><span id="connTxt">연결 중…</span></div>
+      <button class="lock-btn" id="lockBtn" title="이 날짜 잠금/해제">🔓</button>
       <button class="edit-btn" id="editBtn">편집</button>
     </div>
   </header>
@@ -259,11 +263,28 @@ function countIds(ids,dk,meal){ return ids.filter(id=>!isOff(dk,id)&&val(dk,meal
 function countV(ids,dk){ return ids.filter(id=>!isOff(dk,id)&&val(dk,"etc",id)==="V").length; }
 function countMeal(dk,meal){ return countIds(allIds(),dk,meal); }
 function countMealV(dk){ return countV(allIds(),dk); }
+function isLocked(dk){ return !!(data._locked && data._locked[dk]); }
 function cycleV(id){ if(!db||!connected){alert("실시간 연결 후 사용하세요.");return;}
+  if(isLocked(selected)){alert("🔒 잠긴 날짜예요. 관리자 핀으로 해제 후 변경하세요.");return;}
   const cur=val(selected,"etc",id); db.ref(`${DB_PATH}/${selected}/etc/${id}`).set(cur==="V"?null:"V"); }
 function cycle(id,meal){ if(!db||!connected){alert("실시간 연결 후 사용하세요.");return;}
+  if(isLocked(selected)){alert("🔒 잠긴 날짜예요. 관리자 핀으로 해제 후 변경하세요.");return;}
   const cur=val(selected,meal,id); const next=cur==="O"?"X":cur==="X"?null:"O";
   db.ref(`${DB_PATH}/${selected}/${meal}/${id}`).set(next); }
+function toggleLock(){
+  if(!db||!connected){alert("실시간 연결 후 사용하세요.");return;}
+  if(!data._pin){
+    const p1=prompt("잠금 핀(비밀번호)을 설정하세요.\n이 핀을 아는 사람만 잠금/해제할 수 있어요."); if(!p1||!p1.trim())return;
+    db.ref(DB_PATH+"/_pin").set(p1.trim());
+    db.ref(DB_PATH+"/_locked/"+selected).set(true);
+    alert("핀 설정 완료 · 이 날짜를 잠갔어요 🔒");
+    return;
+  }
+  const locked=isLocked(selected);
+  const p=prompt(locked?"핀 입력 (잠금 해제)":"핀 입력 (이 날짜 잠금)"); if(p===null)return;
+  if(p.trim()!==String(data._pin)){ alert("핀이 틀렸어요."); return; }
+  db.ref(DB_PATH+"/_locked/"+selected).set(locked?null:true);
+}
 
 /* ===== 편집 공통 ===== */
 function rRef(){ return db.ref(DB_PATH+"/_roster"); }
@@ -336,7 +357,7 @@ function colHead(){ return editMode
 
 function renderTabs(){
   const el=document.getElementById("tabs");
-  el.innerHTML=sortedDates().map(d=>`<div class="tab ${d.key===selected?'active':''}" data-k="${d.key}"><b>${d.label}</b><span>${d.day}</span></div>`).join("");
+  el.innerHTML=sortedDates().map(d=>`<div class="tab ${d.key===selected?'active':''}" data-k="${d.key}"><b>${d.label}${isLocked(d.key)?' 🔒':''}</b><span>${d.day}</span></div>`).join("");
   el.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{selected=t.dataset.k;renderAll();});
 }
 function renderDateEdit(){
@@ -393,6 +414,10 @@ function renderAll(){
   if(dragState) return;
   if(!dates.some(d=>d.key===selected)){ const s=sortedDates()[0]; selected=s?s.key:null; }
   renderTabs(); renderDateEdit(); renderSummary(); renderApp(); renderStatus();
+  const lk=isLocked(selected);
+  const lb=document.getElementById("lockBtn");
+  lb.textContent=lk?"🔒":"🔓"; lb.classList.toggle("on",lk);
+  document.body.classList.toggle("locked-day",lk);
 }
 
 /* ===== 이벤트 ===== */
@@ -420,6 +445,7 @@ document.getElementById("editBtn").onclick=()=>{
   editMode=!editMode; document.body.classList.toggle("edit",editMode);
   document.getElementById("editBtn").textContent=editMode?"완료":"편집"; renderAll();
 };
+document.getElementById("lockBtn").onclick=toggleLock;
 document.getElementById("statusBtn").onclick=()=>{
   const s=document.getElementById("status"); const open=s.classList.toggle("show");
   document.getElementById("statusBtn").textContent=open?"📊 전체 현황 닫기":"📊 전체 날짜 식수 현황 보기";
