@@ -490,16 +490,15 @@ function onPointerDown(e){
   dragState={ id:grip.dataset.id, srcGrp:grip.dataset.grp, srcTk:grip.dataset.team||"", row };
   row.classList.add("dragging");
   document.body.classList.add("dragging-active");
-  try{ row.setPointerCapture(e.pointerId); }catch(_){}
 }
 function onPointerMove(e){
   if(!dragState) return; e.preventDefault();
-  const y=e.clientY, row=dragState.row;
-  const cards=[...document.querySelectorAll("#app .card")];
-  let card=null;
-  for(const c of cards){ const r=c.getBoundingClientRect(); if(y>=r.top && y<=r.bottom){ card=c; break; } }
-  if(!card) return;
-  const rows=[...card.querySelectorAll(".row.e")];
+  const row=dragState.row;
+  row.style.pointerEvents="none";
+  const under=document.elementFromPoint(e.clientX, e.clientY);
+  row.style.pointerEvents="";
+  const card=under && under.closest("#app .card"); if(!card) return;
+  const rows=[...card.querySelectorAll(".row.e")], y=e.clientY;
   let target=null;
   for(const rr of rows){ if(rr===row) continue; const rc=rr.getBoundingClientRect(); if(y < rc.top+rc.height/2){ target=rr; break; } }
   if(target){ if(row.nextSibling!==target) card.insertBefore(row,target); }
