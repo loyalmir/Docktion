@@ -84,6 +84,7 @@
   body.dragging-active{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;cursor:grabbing;}
   body.dragging-active *{user-select:none !important;-webkit-user-select:none !important;}
   .row.off{opacity:.42;}
+  .row.off .cell{cursor:not-allowed;}
   .nm{font-size:15px;font-weight:600;display:flex;align-items:center;gap:7px;min-width:0;}
   .nm-edit{background:none;border:none;font-family:inherit;font-size:15px;font-weight:600;color:var(--ink);text-align:left;padding:0;cursor:pointer;display:flex;align-items:center;gap:7px;min-width:0;}
   .pen{color:var(--ink-soft);font-size:12px;flex:0 0 auto;}
@@ -294,9 +295,11 @@ function countMealV(dk){ return countV(allIds(),dk); }
 function isLocked(dk){ return !!(data._locked && data._locked[dk]); }
 function cycleV(id){ if(!db||!connected){alert("실시간 연결 후 사용하세요.");return;}
   if(isLocked(selected)){alert("🔒 잠긴 날짜예요. 관리자 핀으로 해제 후 변경하세요.");return;}
+  if(isOff(selected,id)){alert(nameOf(id)+" 님은 이 날짜에 '안옴'이에요. 참여로 바꾼 뒤 체크하세요.");return;}
   const cur=val(selected,"etc",id); db.ref(`${DB_PATH}/${selected}/etc/${id}`).set(cur==="V"?null:"V"); }
 function cycle(id,meal){ if(!db||!connected){alert("실시간 연결 후 사용하세요.");return;}
   if(isLocked(selected)){alert("🔒 잠긴 날짜예요. 관리자 핀으로 해제 후 변경하세요.");return;}
+  if(isOff(selected,id)){alert(nameOf(id)+" 님은 이 날짜에 '안옴'이에요. 참여로 바꾼 뒤 체크하세요.");return;}
   const cur=val(selected,meal,id); const next=cur==="O"?"X":cur==="X"?null:"O";
   db.ref(`${DB_PATH}/${selected}/${meal}/${id}`).set(next); }
 function toggleLock(){
