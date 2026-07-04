@@ -233,6 +233,7 @@ const DEFAULT_ROSTER = buildDefaultRoster();
 let db=null, data={}, roster=DEFAULT_ROSTER, dates=DEFAULT_DATES.slice();
 let connected=false, editMode=false, initing=false, dragState=null;
 let selected = DEFAULT_DATES[0].key;
+let pickedToday = false;
 
 /* ===== Firebase ===== */
 try{
@@ -247,6 +248,7 @@ try{
     data = snap.val() || {};
     roster = data._roster || DEFAULT_ROSTER;
     dates  = data._dates  || DEFAULT_DATES.slice();
+    if(!pickedToday){ pickedToday=true; pickToday(); }
     initIfEmpty(); renderAll();
   });
 }catch(e){ document.getElementById("connTxt").textContent="설정 필요"; console.error(e); renderAll(); }
@@ -264,6 +266,14 @@ function initIfEmpty(){
 function parseMD(s){ const m=String(s).match(/(\d{1,2})\s*[\/.\-월]\s*(\d{1,2})/); return m?{mo:+m[1],d:+m[2]}:null; }
 function mkDate(s){ const p=parseMD(s); if(!p)return null; return {label:p.mo+"/"+p.d, day:KDAY[new Date(YEAR,p.mo-1,p.d).getDay()]}; }
 function sortedDates(){ return dates.slice().sort((a,b)=>{const pa=parseMD(a.label)||{mo:99,d:99},pb=parseMD(b.label)||{mo:99,d:99};return (pa.mo*100+pa.d)-(pb.mo*100+pb.d);}); }
+function pickToday(){
+  const sd=sortedDates(); if(!sd.length) return;
+  const now=new Date(); const td=(now.getMonth()+1)*100+now.getDate();
+  let hit = sd.find(x=>{const p=parseMD(x.label); return p && p.mo*100+p.d===td;})
+        || sd.find(x=>{const p=parseMD(x.label); return p && p.mo*100+p.d>=td;})
+        || sd[sd.length-1];
+  if(hit) selected=hit.key;
+}
 
 /* ===== 명단 ===== */
 function nameOf(id){ return (roster.names && roster.names[id]) || id; }
