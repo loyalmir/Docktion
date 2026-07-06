@@ -55,7 +55,8 @@
   .imp-hint b{font-weight:800;color:var(--ink);}
 
   .summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:10px;padding-bottom:14px;}
-  .scard{background:var(--card);border:1.5px solid #cfe9d8;border-radius:14px;padding:10px 13px;display:flex;align-items:center;justify-content:space-between;}
+  .scard{background:var(--card);border:1.5px solid #cfe9d8;border-radius:14px;padding:10px 13px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:.12s;}
+  .scard:active{transform:scale(.97);}
   .scard.sc-v{border-color:#f0c2c2;}
   .scard.sc-v .num{color:var(--x);}
   .scard.sc-c{border-color:#cbc9f5;}
@@ -142,6 +143,21 @@
   tr.total td{border-top:2px solid var(--line);font-weight:800;font-size:15px;background:#faf8f3;}
 
   footer{text-align:center;font-size:11px;color:var(--ink-soft);padding:8px 0 4px;line-height:1.7;}
+
+  .ml-overlay{position:fixed;inset:0;background:rgba(30,26,20,.45);z-index:100;display:none;align-items:flex-end;justify-content:center;}
+  .ml-overlay.show{display:flex;}
+  .ml-card{background:var(--paper);width:100%;max-width:560px;max-height:82vh;overflow-y:auto;border-radius:18px 18px 0 0;}
+  .ml-head{position:sticky;top:0;background:var(--paper);display:flex;align-items:center;gap:8px;padding:16px 16px 11px;font-size:15px;font-weight:700;color:var(--ink);border-bottom:1px solid var(--line);}
+  .ml-head b{font-weight:800;}
+  .ml-x{margin-left:auto;flex:0 0 auto;width:30px;height:30px;border:none;background:#eae5da;border-radius:9px;font-size:18px;font-weight:800;color:var(--ink-soft);cursor:pointer;line-height:1;}
+  .ml-body{padding:12px 16px 26px;}
+  .ml-empty{color:var(--ink-soft);font-weight:600;text-align:center;padding:26px 0;}
+  .ml-grp{margin-bottom:14px;}
+  .ml-gname{font-size:13px;font-weight:800;color:var(--ink-soft);margin-bottom:7px;}
+  .ml-gname span{color:var(--o);}
+  .ml-names{display:flex;flex-wrap:wrap;gap:6px;}
+  .ml-chip{background:var(--card);border:1.5px solid var(--line);border-radius:9px;padding:6px 11px;font-size:14px;font-weight:700;}
+
 </style>
 </head>
 <body>
@@ -170,10 +186,10 @@
   </div>
 
   <div class="summary">
-    <div class="scard"><span class="lab">🍚 점심 (O)</span><span class="num" id="sumL">0<small>명</small></span></div>
-    <div class="scard"><span class="lab">🌙 저녁 (O)</span><span class="num" id="sumD">0<small>명</small></span></div>
-    <div class="scard sc-v"><span class="lab">🚩 도착</span><span class="num" id="sumE">0<small>명</small></span></div>
-    <div class="scard sc-c"><span class="lab">👕 의상</span><span class="num" id="sumC">0<small>명</small></span></div>
+    <div class="scard" data-list="lunch"><span class="lab">🍚 점심</span><span class="num" id="sumL">0<small>명</small></span></div>
+    <div class="scard" data-list="dinner"><span class="lab">🌙 저녁</span><span class="num" id="sumD">0<small>명</small></span></div>
+    <div class="scard sc-v" data-list="etc"><span class="lab">🚩 도착</span><span class="num" id="sumE">0<small>명</small></span></div>
+    <div class="scard sc-c" data-list="cos"><span class="lab">👕 의상</span><span class="num" id="sumC">0<small>명</small></span></div>
   </div>
 
   <div id="app"></div>
@@ -186,6 +202,8 @@
     [편집]에서 날짜·인원 추가/수정/삭제 및 날짜별 참여 인원을 정할 수 있어요
   </footer>
 </div>
+
+<div class="ml-overlay" id="listModal"><div class="ml-card"></div></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
@@ -487,6 +505,27 @@ document.getElementById("statusBtn").onclick=()=>{
   const s=document.getElementById("status"); const open=s.classList.toggle("show");
   document.getElementById("statusBtn").textContent=open?"📊 전체 현황 닫기":"📊 전체 날짜 식수 현황 보기";
 };
+
+/* ===== 요약 카드 → 누가 체크했는지 명단 팝업 ===== */
+const LIST_LABEL={lunch:"🍚 점심 먹는 사람",dinner:"🌙 저녁 먹는 사람",etc:"🚩 도착한 사람",cos:"👕 의상 받은 사람"};
+function showList(kind){
+  const want=(kind==="lunch"||kind==="dinner")?"O":"V";
+  const pick=ids=>ids.filter(id=>!isOff(selected,id)&&val(selected,kind,id)===want).map(nameOf);
+  const groups=[];
+  const mg=pick(managerIds()); if(mg.length) groups.push({name:"관리자",names:mg});
+  teamList().forEach(tm=>{ const ns=pick([tm.leader,...memberIds(tm)].filter(Boolean)); if(ns.length) groups.push({name:nameOf(tm.leader)+" 팀",names:ns}); });
+  const total=groups.reduce((s,g)=>s+g.names.length,0);
+  const dl=(sortedDates().find(d=>d.key===selected)||{}).label||"";
+  let html=`<div class="ml-head"><b>${LIST_LABEL[kind]}</b>&nbsp;· ${dl} · 총 ${total}명<button class="ml-x" data-act="closeList">×</button></div><div class="ml-body">`;
+  if(!groups.length) html+=`<div class="ml-empty">아직 체크한 사람이 없어요.</div>`;
+  groups.forEach(g=>{ html+=`<div class="ml-grp"><div class="ml-gname">${g.name} <span>${g.names.length}</span></div><div class="ml-names">${g.names.map(n=>`<span class="ml-chip">${n}</span>`).join("")}</div></div>`; });
+  html+=`</div>`;
+  const m=document.getElementById("listModal");
+  m.querySelector(".ml-card").innerHTML=html; m.classList.add("show");
+}
+function closeList(){ document.getElementById("listModal").classList.remove("show"); }
+document.querySelector(".summary").addEventListener("click",e=>{ const c=e.target.closest("[data-list]"); if(c) showList(c.dataset.list); });
+document.getElementById("listModal").addEventListener("click",e=>{ if(e.target.id==="listModal"||e.target.closest(".ml-x")) closeList(); });
 
 /* ===== 엑셀(참석현황) 가져오기 ===== */
 function importExcel(file){
