@@ -54,12 +54,14 @@
   .imp-hint{font-size:11px;color:var(--ink-soft);font-weight:600;line-height:1.6;margin-top:7px;text-align:center;}
   .imp-hint b{font-weight:800;color:var(--ink);}
 
-  .summary{display:flex;gap:10px;padding-bottom:14px;}
-  .scard{flex:1;background:var(--card);border:1.5px solid #cfe9d8;border-radius:16px;padding:13px 15px;display:flex;align-items:center;justify-content:space-between;}
+  .summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:10px;padding-bottom:14px;}
+  .scard{background:var(--card);border:1.5px solid #cfe9d8;border-radius:14px;padding:10px 13px;display:flex;align-items:center;justify-content:space-between;}
   .scard.sc-v{border-color:#f0c2c2;}
   .scard.sc-v .num{color:var(--x);}
+  .scard.sc-c{border-color:#cbc9f5;}
+  .scard.sc-c .num{color:#4f46e5;}
   .scard .lab{font-size:13px;font-weight:700;color:var(--ink-soft);}
-  .scard .num{font-size:30px;font-weight:800;letter-spacing:-0.03em;line-height:1;color:var(--o);}
+  .scard .num{font-size:25px;font-weight:800;letter-spacing:-0.03em;line-height:1;color:var(--o);}
   .scard .num small{font-size:14px;font-weight:700;color:var(--ink-soft);margin-left:2px;}
 
   .card{background:var(--card);border:1.5px solid var(--line);border-radius:16px;margin-bottom:12px;overflow:hidden;}
@@ -72,50 +74,51 @@
   .team-del{width:26px;height:26px;border-radius:8px;border:1.5px solid #f0c0c0;background:#fff;color:var(--x);font-weight:800;font-size:15px;line-height:1;cursor:pointer;padding:0;display:none;}
   body.edit .team-del{display:inline-block;}
 
-  .labs{display:flex;gap:6px;}
-  .labs span{width:46px;text-align:center;font-size:11px;font-weight:800;color:var(--ink-soft);}
-  .col-head.n{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 15px 2px;}
-  .col-head.e{display:grid;grid-template-columns:20px 1fr auto 44px 28px;gap:6px;align-items:center;padding:8px 12px 2px;}
+  .labs{display:flex;gap:5px;}
+  .labs span{width:40px;text-align:center;font-size:11px;font-weight:800;color:var(--ink-soft);}
+  .col-head.n{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 12px 2px;}
+  .col-head.e{display:grid;grid-template-columns:18px 1fr auto 40px 26px;gap:6px;align-items:center;padding:8px 12px 2px;}
 
-  .row.n{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 15px;border-top:1px solid #f1ede4;}
-  .row.e{display:grid;grid-template-columns:20px 1fr auto 44px 28px;gap:6px;align-items:center;padding:8px 12px;border-top:1px solid #f1ede4;}
-  .grip{width:20px;height:32px;border:none;background:none;color:#c3bdb0;font-size:16px;line-height:1;cursor:grab;padding:0;touch-action:none;}
+  .row.n{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:7px 12px;border-top:1px solid #f1ede4;}
+  .row.e{display:grid;grid-template-columns:18px 1fr auto 40px 26px;gap:6px;align-items:center;padding:8px 12px;border-top:1px solid #f1ede4;}
+  .grip{width:18px;height:32px;border:none;background:none;color:#c3bdb0;font-size:16px;line-height:1;cursor:grab;padding:0;touch-action:none;}
   .row.e.dragging{opacity:.9;background:#f3efe6;box-shadow:0 5px 14px rgba(0,0,0,.14);border-radius:10px;position:relative;z-index:5;}
   body.dragging-active{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;cursor:grabbing;}
   body.dragging-active *{user-select:none !important;-webkit-user-select:none !important;}
   .row.off{opacity:.42;}
   .row.off .cell{cursor:not-allowed;}
-  .nm{font-size:15px;font-weight:600;display:flex;align-items:center;gap:7px;min-width:0;}
+  .nm{font-size:14px;font-weight:600;display:flex;align-items:center;gap:7px;min-width:0;}
   .nm-edit{background:none;border:none;font-family:inherit;font-size:15px;font-weight:600;color:var(--ink);text-align:left;padding:0;cursor:pointer;display:flex;align-items:center;gap:7px;min-width:0;}
   .pen{color:var(--ink-soft);font-size:12px;flex:0 0 auto;}
   .badge{font-size:10px;font-weight:800;color:#fff;padding:2px 6px;border-radius:6px;flex:0 0 auto;}
   .badge.l{background:var(--leader);} .badge.m{background:var(--mgr);}
 
-  .cells{display:flex;gap:6px;}
-  body.locked-day .cell{opacity:.85;cursor:not-allowed;}
-  .cell{width:46px;padding:8px 0;border:1.5px solid var(--line);background:#fff;border-radius:10px;font-family:inherit;font-weight:800;font-size:15px;color:#c3bdb0;cursor:pointer;transition:.12s;}
+  .cells{display:flex;gap:5px;}
+  body.locked-day .cell.meal{opacity:.7;cursor:not-allowed;}
+  .cell{width:40px;padding:7px 0;border:1.5px solid var(--line);background:#fff;border-radius:9px;font-family:inherit;font-weight:800;font-size:14px;color:#c3bdb0;cursor:pointer;transition:.12s;}
   .cell:active{transform:scale(.9);}
   .cell.o{background:var(--o);border-color:var(--o);color:#fff;}
   .cell.x{background:#fdecec;border-color:#f0b4b4;color:var(--x);}
   .cell.v{background:var(--x);border-color:var(--x);color:#fff;}
-  .cell.sep{margin-left:10px;position:relative;}
+  .cell.c{background:#4f46e5;border-color:#4f46e5;color:#fff;}
+  .cell.sep{margin-left:7px;position:relative;}
   .cell.sep::before{content:"";position:absolute;left:-6px;top:2px;bottom:2px;width:1.5px;background:var(--line);}
-  .labs span.sep{margin-left:10px;}
+  .labs span.sep{margin-left:7px;}
 
   /* 편집모드: 칸·이름 컴팩트하게 (보기모드는 그대로) */
-  body.edit .cell{width:38px;font-size:14px;padding:7px 0;}
+  body.edit .cell{width:31px;font-size:13px;padding:7px 0;}
   body.edit .cells{gap:4px;}
   body.edit .cell.sep{margin-left:7px;}
   body.edit .cell.sep::before{left:-4px;}
   body.edit .labs{gap:4px;}
-  body.edit .labs span{width:38px;}
+  body.edit .labs span{width:31px;}
   body.edit .labs span.sep{margin-left:7px;}
   body.edit .nm-edit{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   body.edit .nm-edit .badge{padding:1px 4px;}
   body.edit .pen{display:none;}
 
-  .del{width:28px;height:28px;border-radius:8px;border:1.5px solid #f0c0c0;background:#fff;color:var(--x);font-weight:800;font-size:16px;line-height:1;cursor:pointer;padding:0;}
-  .part{width:44px;height:28px;border-radius:8px;border:1.5px solid var(--line);background:#fff;color:var(--ink-soft);font-family:inherit;font-weight:800;font-size:11px;line-height:1;cursor:pointer;padding:0;}
+  .del{width:26px;height:26px;border-radius:8px;border:1.5px solid #f0c0c0;background:#fff;color:var(--x);font-weight:800;font-size:16px;line-height:1;cursor:pointer;padding:0;}
+  .part{width:40px;height:28px;border-radius:8px;border:1.5px solid var(--line);background:#fff;color:var(--ink-soft);font-family:inherit;font-weight:800;font-size:11px;line-height:1;cursor:pointer;padding:0;}
   .part.off{border-color:#f0c0c0;background:#fdecec;color:var(--x);}
   .offtag{font-size:10px;font-weight:800;color:var(--x);background:#fdecec;padding:2px 6px;border-radius:6px;flex:0 0 auto;}
 
@@ -170,6 +173,7 @@
     <div class="scard"><span class="lab">🍚 점심 (O)</span><span class="num" id="sumL">0<small>명</small></span></div>
     <div class="scard"><span class="lab">🌙 저녁 (O)</span><span class="num" id="sumD">0<small>명</small></span></div>
     <div class="scard sc-v"><span class="lab">🚩 도착</span><span class="num" id="sumE">0<small>명</small></span></div>
+    <div class="scard sc-c"><span class="lab">👕 의상</span><span class="num" id="sumC">0<small>명</small></span></div>
   </div>
 
   <div id="app"></div>
@@ -290,13 +294,17 @@ function isOff(dk,id){ return !!(data._dayoff && data._dayoff[dk] && data._dayof
 function val(dk,meal,id){ const v=data&&data[dk]&&data[dk][meal]?data[dk][meal][id]:undefined; if(v===true)return "O"; return v||null; }
 function countIds(ids,dk,meal){ return ids.filter(id=>!isOff(dk,id)&&val(dk,meal,id)==="O").length; }
 function countV(ids,dk){ return ids.filter(id=>!isOff(dk,id)&&val(dk,"etc",id)==="V").length; }
+function countCos(ids,dk){ return ids.filter(id=>!isOff(dk,id)&&val(dk,"cos",id)==="V").length; }
 function countMeal(dk,meal){ return countIds(allIds(),dk,meal); }
 function countMealV(dk){ return countV(allIds(),dk); }
+function countMealCos(dk){ return countCos(allIds(),dk); }
 function isLocked(dk){ return !!(data._locked && data._locked[dk]); }
 function cycleV(id){ if(!db||!connected){alert("실시간 연결 후 사용하세요.");return;}
-  if(isLocked(selected)){alert("🔒 잠긴 날짜예요. 관리자 핀으로 해제 후 변경하세요.");return;}
   if(isOff(selected,id)){alert(nameOf(id)+" 님은 이 날짜에 '안옴'이에요. 참여로 바꾼 뒤 체크하세요.");return;}
   const cur=val(selected,"etc",id); db.ref(`${DB_PATH}/${selected}/etc/${id}`).set(cur==="V"?null:"V"); }
+function cycleCos(id){ if(!db||!connected){alert("실시간 연결 후 사용하세요.");return;}
+  if(isOff(selected,id)){alert(nameOf(id)+" 님은 이 날짜에 '안옴'이에요. 참여로 바꾼 뒤 체크하세요.");return;}
+  const cur=val(selected,"cos",id); db.ref(`${DB_PATH}/${selected}/cos/${id}`).set(cur==="V"?null:"V"); }
 function cycle(id,meal){ if(!db||!connected){alert("실시간 연결 후 사용하세요.");return;}
   if(isLocked(selected)){alert("🔒 잠긴 날짜예요. 관리자 핀으로 해제 후 변경하세요.");return;}
   if(isOff(selected,id)){alert(nameOf(id)+" 님은 이 날짜에 '안옴'이에요. 참여로 바꾼 뒤 체크하세요.");return;}
@@ -359,15 +367,17 @@ function delTeam(tk){ if(!guard())return; const tm=roster.teams[tk]; if(!confirm
 
 /* ===== 렌더 ===== */
 function cellHtml(id,meal){ const v=val(selected,meal,id); const cls=v==="O"?"o":v==="X"?"x":""; const g=v==="O"?"O":v==="X"?"X":"·";
-  return `<button class="cell ${cls}" data-act="cell" data-id="${id}" data-meal="${meal}">${g}</button>`; }
+  return `<button class="cell meal ${cls}" data-act="cell" data-id="${id}" data-meal="${meal}">${g}</button>`; }
 function cellV(id){ const on=val(selected,"etc",id)==="V";
   return `<button class="cell sep ${on?'v':''}" data-act="cellV" data-id="${id}">${on?'V':'·'}</button>`; }
+function cellCos(id){ const on=val(selected,"cos",id)==="V";
+  return `<button class="cell ${on?'c':''}" data-act="cellCos" data-id="${id}">${on?'V':'·'}</button>`; }
 function badgeHtml(role){ return role==="leader"?'<span class="badge l">팀장</span>':role==="manager"?'<span class="badge m">관리자</span>':''; }
 function rowHtml(id,role,tk){
   const nm=nameOf(id), badge=badgeHtml(role);
   const off=isOff(selected,id);
   if(!editMode){
-    return `<div class="row n${off?' off':''}"><span class="nm">${nm}${badge}${off?'<span class="offtag">안옴</span>':''}</span><div class="cells">${cellHtml(id,"lunch")}${cellHtml(id,"dinner")}${cellV(id)}</div></div>`;
+    return `<div class="row n${off?' off':''}"><span class="nm">${nm}${badge}${off?'<span class="offtag">안옴</span>':''}</span><div class="cells">${cellHtml(id,"lunch")}${cellHtml(id,"dinner")}${cellV(id)}${cellCos(id)}</div></div>`;
   }
   const nameBtn=`<button class="nm-edit" data-act="rename" data-id="${id}">${nm}${badge}<span class="pen">✎</span></button>`;
   const toggle=`<button class="part ${off?'off':''}" data-act="dayToggle" data-id="${id}" title="${off?'참여로 표시':'오늘 안옴으로 표시'}">${off?'안옴':'참여'}</button>`;
@@ -375,11 +385,11 @@ function rowHtml(id,role,tk){
     : `<button class="grip" data-id="${id}" data-grp="${role==="manager"?"mgr":"team"}" data-team="${tk||''}">≡</button>`;
   const delAct= role==="manager"?"delMgr":role==="leader"?"delTeam":"delMem";
   const del=`<button class="del" data-act="${delAct}" data-id="${id}" data-team="${tk||''}" title="명단에서 완전삭제">×</button>`;
-  return `<div class="row e${role==="leader"?" leaderrow":""}${off?' off':''}">${grip}${nameBtn}<div class="cells">${cellHtml(id,"lunch")}${cellHtml(id,"dinner")}${cellV(id)}</div>${toggle}${del}</div>`;
+  return `<div class="row e${role==="leader"?" leaderrow":""}${off?' off':''}">${grip}${nameBtn}<div class="cells">${cellHtml(id,"lunch")}${cellHtml(id,"dinner")}${cellV(id)}${cellCos(id)}</div>${toggle}${del}</div>`;
 }
 function colHead(){ return editMode
-  ? `<div class="col-head e"><span></span><span></span><div class="labs"><span>점심</span><span>저녁</span><span class="sep">도착</span></div><span></span><span></span></div>`
-  : `<div class="col-head n"><span></span><div class="labs"><span>점심</span><span>저녁</span><span class="sep">도착</span></div></div>`; }
+  ? `<div class="col-head e"><span></span><span></span><div class="labs"><span>점심</span><span>저녁</span><span class="sep">도착</span><span>의상</span></div><span></span><span></span></div>`
+  : `<div class="col-head n"><span></span><div class="labs"><span>점심</span><span>저녁</span><span class="sep">도착</span><span>의상</span></div></div>`; }
 
 function renderTabs(){
   const el=document.getElementById("tabs");
@@ -396,6 +406,7 @@ function renderSummary(){
   document.getElementById("sumL").innerHTML=countMeal(selected,"lunch")+'<small>명</small>';
   document.getElementById("sumD").innerHTML=countMeal(selected,"dinner")+'<small>명</small>';
   document.getElementById("sumE").innerHTML=countMealV(selected)+'<small>명</small>';
+  document.getElementById("sumC").innerHTML=countMealCos(selected)+'<small>명</small>';
 }
 function renderApp(){
   let html="";
@@ -403,7 +414,7 @@ function renderApp(){
   const mids=managerIds();
   if(editMode || mids.length){
     html+=`<div class="card" data-grp="mgr"><div class="card-head"><div class="card-name mgr">관리자</div>
-      <div class="card-sub">점심 <i>${countIds(mids,selected,"lunch")}</i> · 저녁 <i>${countIds(mids,selected,"dinner")}</i> · 도착 <i>${countV(mids,selected)}</i></div></div>`;
+      <div class="card-sub">점심 <i>${countIds(mids,selected,"lunch")}</i> · 저녁 <i>${countIds(mids,selected,"dinner")}</i> · 도착 <i>${countV(mids,selected)}</i> · 의상 <i>${countCos(mids,selected)}</i></div></div>`;
     if(mids.length) html+=colHead()+mids.map(id=>rowHtml(id,"manager")).join("");
     html+=`<div class="add-row"><button class="add-btn" data-act="addMgr">+ 관리자 추가</button></div></div>`;
   }
@@ -416,7 +427,7 @@ function renderApp(){
       : `<div class="card-name">${nameOf(tm.leader)} 팀</div>`;
     html+=`<div class="card" data-grp="team" data-tk="${tm.key}"><div class="card-head">${nameEl}
       <div style="display:flex;align-items:center;gap:10px">
-        <div class="card-sub">점심 <i>${countIds(ids,selected,"lunch")}</i> · 저녁 <i>${countIds(ids,selected,"dinner")}</i> · 도착 <i>${countV(ids,selected)}</i></div>
+        <div class="card-sub">점심 <i>${countIds(ids,selected,"lunch")}</i> · 저녁 <i>${countIds(ids,selected,"dinner")}</i> · 도착 <i>${countV(ids,selected)}</i> · 의상 <i>${countCos(ids,selected)}</i></div>
         <button class="team-del" data-act="delTeam" data-team="${tm.key}">×</button>
       </div></div>`;
     if(ids.length) html+=colHead();
@@ -451,6 +462,7 @@ function handleClick(e){
   switch(a){
     case "cell": cycle(id,b.dataset.meal); break;
     case "cellV": cycleV(id); break;
+    case "cellCos": cycleCos(id); break;
     case "rename": renamePerson(id); break;
     case "dayToggle": dayToggle(id); break;
     case "delMgr": delManager(id); break;
