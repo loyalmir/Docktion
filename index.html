@@ -207,15 +207,14 @@
 
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* =========================================================
    ⚙️ 설정 — 기존 munhwabu-siksu.html / teamday.html 의
    firebaseConfig 와 동일하게 넣으세요. (지역 주소 확인!)
 ========================================================= */
-const firebaseConfig = {
-  databaseURL: "https://k-hary-default-rtdb.firebaseio.com"
-};
+const firebaseConfig = { apiKey: "AIzaSyDPsFRRO7PCrlTgOv0RWhwZ_Ve0zEcb-6c", authDomain: "k-hary.firebaseapp.com", databaseURL: "https://k-hary-default-rtdb.firebaseio.com", projectId: "k-hary", appId: "1:510579164438:web:54d1c3408a8968aea27c37" };
 const DB_PATH = "siksu_docktion_v2";
 const YEAR = 2026;
 const KDAY = ["일","월","화","수","목","금","토"];
@@ -262,6 +261,9 @@ let pickedToday = false;
 try{
   firebase.initializeApp(firebaseConfig);
   db = firebase.database();
+  firebase.auth().signInAnonymously().catch(e=>console.warn("익명 로그인 실패", e)).finally(startListen);
+}catch(e){ document.getElementById("connTxt").textContent="설정 필요"; console.error(e); renderAll(); }
+function startListen(){
   db.ref(".info/connected").on("value", s=>{
     connected = s.val()===true;
     document.getElementById("dot").classList.toggle("on", connected);
@@ -274,7 +276,7 @@ try{
     if(!pickedToday){ pickedToday=true; pickToday(); }
     initIfEmpty(); renderAll();
   });
-}catch(e){ document.getElementById("connTxt").textContent="설정 필요"; console.error(e); renderAll(); }
+}
 /* DB가 "정말로" 비어있을 때만 기본값을 1회 생성.
    트랜잭션으로 서버의 현재값을 직접 보고 판단하므로, 이미 저장된
    명단/날짜를 절대 덮어쓰지 않음 (편집 내용 보존). */
